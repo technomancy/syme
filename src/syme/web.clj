@@ -73,9 +73,9 @@
   (fn [req]
     (try (handler req)
          (catch Exception e
-           {:status 500
+           {:status (:status (ex-data e) 500)
             :headers {"Content-Type" "text/html"}
-            :body (slurp (io/resource "500.html"))}))))
+            :body (:body (ex-data e) (slurp (io/resource "500.html")))}))))
 
 (defn -main [& [port]]
   (let [port (Integer. (or port (env :port) 5000))

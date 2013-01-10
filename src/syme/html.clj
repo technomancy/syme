@@ -34,20 +34,24 @@
 
 (defn project [username repo-name]
   (let [repo (repos/specific-repo username repo-name)]
-    ;; TODO: check for not found
-    (layout
-     [:div
-      [:h3 (:name repo)]
-      [:p {:id "desc"} (:description repo)]
-      [:form {:action "/project" :method :post}
-       [:p [:label {:for "invite"}
-            "space-separated list of GitHub usernames to invite:"]]
-       [:input {:type :hidden :name project :value repo-name}]
-       [:input {:type :text :size 20 :name "invite" :id "invite"}]
-       [:p [:label {:for "identity"}
-            "AWS Access Key ID"]]
-       [:input {:type :text :size 20 :name "identity" :id "identity"}]
-       [:p [:label {:for "credential"}
-            "AWS Access Secret Key"]]
-       [:input {:type :text :size 20 :name "credential" :id "credential"}]
-       [:input {:type :submit :value "Launch!"}]]])))
+    (if (:name repo)
+      (layout
+       [:div
+        [:h3 (:name repo)]
+        [:p {:id "desc"} (:description repo)]
+        [:form {:action "/project" :method :post}
+         [:input {:type :hidden :name "project" :value repo-name}]
+         [:p [:label {:for "invite"}
+              "space-separated list of GitHub usernames to invite:"]]
+         [:input {:type :text :size 20 :name "invite" :id "invite"}]
+         [:p [:label {:for "packages"}
+              "space-separated list debian packages to install:"]]
+         [:input {:type :text :size 20 :name "packages" :id "packages"}]
+         [:p [:label {:for "identity"}
+              "AWS Access Key ID"]]
+         [:input {:type :text :size 20 :name "identity" :id "identity"}]
+         [:p [:label {:for "credential"}
+              "AWS Access Secret Key"]]
+         [:input {:type :text :size 20 :name "credential" :id "credential"}]
+         [:input {:type :submit :value "Launch!"}]]])
+      (throw (ex-info "Repository not found" {:status 404})))))
