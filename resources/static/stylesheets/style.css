@@ -1,0 +1,12 @@
+#header h1 {
+    font-family: 'Electrolize', arial, serif;
+    margin: 0.5em auto;
+}
+
+#header a {
+    text-decoration: none;
+}
+
+#footer {
+    font-size: 80%;
+}
