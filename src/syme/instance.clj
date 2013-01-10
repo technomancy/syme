@@ -2,7 +2,9 @@
   (:require [pallet.core :as pallet]
             [pallet.api :as api]
             [pallet.actions :as actions]
+            [pallet.action :as action]
             [pallet.compute :as compute]
+            [pallet.crate :as crate]
             [pallet.crate.automated-admin-user :as admin]
             [pallet.phase :as phase]
             [clj-http.client :as http]
@@ -30,29 +32,37 @@
                  (:body) (.split "\n"))]
     (map (memfn getBytes) keys)))
 
+(defn configure-phase [username project invite packages]
+  (admin/automated-admin-user
+   "syme" (.getBytes (:public-key env)))
+  (doseq [u (cons username (.split invite ",? +"))]
+    (println "Adding admin" u)
+    (apply admin/automated-admin-user u (get-keys u)))
+  (doseq [p (cons "git" (.split packages ",? +"))]
+    (actions/package p))
+  (action/with-action-options {:sudo-user username
+                               :script-prefix :no-prefix}
+    (actions/exec-checked-script
+     "Project clone"
+     ~(format "sudo -iu %s git clone git://github.com/%s/%s.git"
+              username username project))))
+
 (defn launch [username {:keys [project invite identity credential
                                packages compute] :as opts}]
   (force write-key-pair)
-  ;; NFI
   (alter-var-root #'pallet.core.user/*admin-user* (constantly user))
-  (pallet/converge
-   (pallet/group-spec
-    (str username "/" project)
-    :count 1
-    :node-spec (pallet/node-spec :image {:os-family :ubuntu
-                                         :image-id "us-east-1/ami-3c994355"})
-    :phases {:bootstrap #(admin/automated-admin-user
-                          "syme" (.getBytes (:public-key env)))
-             :configure (fn []
-                          (doseq [u (cons username (.split invite ",? +"))]
-                            (println "Adding admin" u)
-                            (apply admin/automated-admin-user u (get-keys u)))
-                          (doseq [p (cons "git" (.split packages ",? +"))]
-                            (actions/package p))
-                          (actions/exec-checked-script
-                           "Initial clone"
-                           (format "sudo -iu %s git clone git://github.com/%s/%s.git"
-                                   username username project)))})
-   :compute (compute/compute-service (or compute "aws-ec2")
-                                     :identity identity
-                                     :credential credential)))
+  (let [group (str username "/" project)]
+    (pallet/converge
+     (pallet/group-spec
+      group, :count 1
+      :node-spec (pallet/node-spec :image {:os-family :ubuntu
+                                           :image-id "us-east-1/ami-3c994355"})
+      :phases {:bootstrap (fn []
+                            ;; (crate/primary-ip (first (crate/nodes-for-group group)))
+                            (admin/automated-admin-user
+                             "syme" (.getBytes (:public-key env))))
+               :configure (partial configure-phase username project
+                                   invite packages)})
+     :compute (compute/compute-service (or compute "aws-ec2")
+                                       :identity identity
+                                       :credential credential))))
