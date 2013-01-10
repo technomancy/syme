@@ -26,8 +26,13 @@
                  (:body) (.split "\n"))]
     (map (memfn getBytes) keys)))
 
-(defn launch [username {:keys [project invite identity credential]}]
+(defn launch [username {:keys [project invite identity credential compute]}]
   (force write-key-pair)
+  ;; NFI
+  (alter-var-root #'pallet.core.user/*admin-user*
+                  (constantly (api/make-user "syme"
+                                             :public-key-path pubkey
+                                             :private-key-path privkey)))
   (pallet/converge
    (pallet/group-spec
     (str username "/" project)
@@ -45,10 +50,6 @@
                           (actions/exec-script
                            (format "git clone git://github.com/%s/%s.git"
                                    username project)))})
-   ;; apparently :user is broken in 0.8.0-alpha
-   :user (api/make-user "syme"
-                        :public-key-path pubkey
-                        :private-key-path privkey)
-   :compute (config/compute-service "aws-ec2"
+   :compute (config/compute-service (or compute "aws-ec2")
                                     :identity identity
                                     :credential credential)))
