@@ -10,7 +10,7 @@
                  [com.cemerick/drawbridge "0.0.6"]
                  [hiccup "1.0.2"]
                  [tentacles "0.2.4"]
-                 [clj-http "0.6.3"]
+                 [clj-http "0.6.3" :exclusions [commons-logging]]
                  [cheshire "5.0.1"]
                  [environ "0.2.1"]
                  [org.cloudhoist/pallet "0.8.0-alpha.8"]
@@ -21,7 +21,8 @@
                   ;; resolved version
                   :exclusions [org.slf4j/slf4j-api]]
                  [ch.qos.logback/logback-classic "1.0.0"]
-                 [org.jclouds.driver/jclouds-sshj "1.5.2"]]
+                 [org.jclouds.driver/jclouds-sshj "1.5.2"]
+                 [org.slf4j/jcl-over-slf4j "1.6.6"]]
   :repositories {"sonatype"
                  "http://oss.sonatype.org/content/repositories/releases"}
   :min-lein-version "2.0.0"
