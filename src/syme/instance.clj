@@ -66,10 +66,7 @@
       :node-spec (pallet/node-spec :image {:os-family :ubuntu
                                            :image-id "us-east-1/ami-3c994355"})
       :phases {:bootstrap (fn []
-                            (let [[node] (session/nodes-in-group
-                                          session/*session* group)
-                                  ;; TODO: we don't get actual nodes here yet
-                                  ip (try (node/primary-ip node) (catch Exception _))]
+                            (let [ip (node/primary-ip (crate/target-node))]
                               (sql/with-connection db/db
                                 (db/project username project "" ip)))
                             (admin/automated-admin-user
