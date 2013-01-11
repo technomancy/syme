@@ -67,19 +67,20 @@
        username)
       (throw (ex-info "Repository not found" {:status 404})))))
 
-(defn project [username gh-user project-name]
+(defn instance [username gh-user project-name]
   (sql/with-connection db/db
-    (if-let [project (db/find username project-name)]
+    (def iii (db/find username (str gh-user "/" project-name)))
+    (if-let [instance (db/find username (str gh-user "/" project-name))]
       (layout
        [:div
-        [:h3 (:name project)]
-        [:p {:id "desc"} (:description project)]
-        (if (:ip project)
-          [:p {:id "ip"} "IP: " (:ip project)]
-          [:p {:id "ip"} "Waiting to boot..."])
+        [:h3 (:project instance)]
+        [:p {:id "desc"} (:description instance)]
+        (if (:ip instance)
+          [:p {:id "ip"} [:tt "ssh " (:ip instance)]]
+          [:p "Waiting to boot..."])
         [:p "Invited:"]
         [:ul {:id "invitations"}
-         (for [i (:invitees project)]
+         (for [i (:invitees instance)]
            [:li [:a {:href (str "https://github.com/" i)} i]])]]
        username)
       (throw (ex-info "Repository not found" {:status 404})))))

@@ -53,18 +53,16 @@
                              (:identity session) (:credential session))}
          (assoc (res/redirect (str "https://github.com/login/oauth/authorize?"
                                    "client_id=" (env :oauth-client-id)))
-           :session (merge session merge {:project project}))))
+           :session (merge session {:project project}))))
   (POST "/launch" {{:keys [username] :as session} :session
                    params :params}
-        (prn :creds (select-keys params
-                                 [:identity :credential]))
-        ;; (future (instance/launch username params))
+        (future (instance/launch username params))
         (assoc (res/redirect (str "/project/" (:project params)))
           :session (merge session (select-keys params
                                                [:identity :credential]))))
   (GET "/project/:gh-user/:project" {{:keys [username]} :session
                                      {:keys [gh-user project]} :params}
-       (html/project username gh-user project))
+       (html/instance username gh-user project))
   (GET "/oauth" {{:keys [code]} :params session :session}
        (if code
          (let [token (get-token code)

@@ -6,39 +6,42 @@
 
 (def db (env/env :database-url "postgres://localhost:5432/syme"))
 
-(defn project [owner name description ip]
-  (sql/insert-record :projects {:id (str owner "/" name)
-                                :description description :ip ip}))
+(defn create [owner project description ip]
+  (sql/insert-record :instances {:project project :owner owner
+                                 :description description :ip ip}))
 
 (defn invite [owner project invitee]
-  (sql/insert-record :invites {:project (str owner "/" project)
-                               :invitee invitee}))
+  (sql/with-query-results [instance]
+    ["SELECT * FROM instances WHERE project = ? and owner = ?"
+     project owner]
+    (sql/insert-record :invites {:instance_id (:id instance)
+                                 :invitee invitee})))
 
 (defn find [username project-name]
   (sql/with-connection db
-    (sql/with-query-results project
-      [(str "SELECT projects.*, invites.* FROM projects, invites"
-            " WHERE projects.id = ?"
-            " AND invites.project = projects.id")
-       (str username "/" project-name)]
+    (sql/with-query-results [instance]
+      ["SELECT * FROM instances WHERE owner = ? AND project = ?"
+       username project-name]
       ;; whatever I suck at sql
-      {:name (str username "/" project-name)
-       :description (:description (first project))
-       :ip (:ip (first project))
-       :invitees (mapv :invitee project)})))
+      (sql/with-query-results invitees
+        ["SELECT * FROM invites WHERE instance_id = ?" (:id instance)]
+        (assoc instance
+          :invitees (mapv :invitee invitees))))))
 
 ;; migrations
 
 (defn initial-schema []
-  (sql/create-table "projects"
-                    [:id :varchar "PRIMARY KEY"]
-                    [:description :text]
+  (sql/create-table "instances"
+                    [:id :serial "PRIMARY KEY"]
+                    [:owner :varchar "NOT NULL"]
+                    [:project :varchar "NOT NULL"]
                     [:ip :varchar]
+                    [:description :text]
                     [:at :timestamp "NOT NULL" "DEFAULT CURRENT_TIMESTAMP"])
   (sql/create-table "invites"
                     [:id :serial "PRIMARY KEY"]
                     [:invitee :varchar "NOT NULL"]
-                    [:project :varchar "NOT NULL"]
+                    [:instance_id :integer "NOT NULL"]
                     [:at :timestamp "NOT NULL" "DEFAULT CURRENT_TIMESTAMP"]))
 
 ;; migrations mechanics
