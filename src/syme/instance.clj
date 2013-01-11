@@ -39,7 +39,19 @@
                  (:body) (.split "\n"))]
     (map (memfn getBytes) keys)))
 
+(defn bootstrap-phase [username project repo]
+  (println "Bootstrapping...")
+  (let [ip (node/primary-ip (crate/target-node))
+        desc (:description @repo)]
+    (sql/with-connection db/db
+      (db/create username project desc ip)))
+  (println "Creating admin user...")
+  (admin/automated-admin-user
+   "syme" (.getBytes (:public-key env)))
+  (println "Done bootstrapping."))
+
 (defn configure-phase [username project invite]
+  (println "Configuring...")
   (admin/automated-admin-user "syme" (.getBytes (:public-key env)))
   (println "Adding owner" username)
   (apply admin/automated-admin-user username (get-keys username))
@@ -69,16 +81,7 @@
       group, :count 1
       :node-spec (pallet/node-spec :image {:os-family :ubuntu
                                            :image-id "us-east-1/ami-3c994355"})
-      :phases {:bootstrap (fn []
-                            (println "Bootstrapping...")
-                            (let [ip (node/primary-ip (crate/target-node))
-                                  desc (:description @repo)]
-                              (sql/with-connection db/db
-                                (db/create username project desc ip)))
-                            (println "Creating admin user...")
-                            (admin/automated-admin-user
-                             "syme" (.getBytes (:public-key env)))
-                            (println "Done bootstrapping, configuring..."))
+      :phases {:bootstrap (partial bootstrap-phase username project repo)
                :configure (partial configure-phase username project invite)})
      :compute (compute/compute-service "aws-ec2"
                                        :identity identity
