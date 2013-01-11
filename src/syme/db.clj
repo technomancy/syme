@@ -8,7 +8,14 @@
 
 (defn create [owner project description ip]
   (sql/insert-record :instances {:project project :owner owner
+                                 :status "bootstrapping"
                                  :description description :ip ip}))
+
+(defn status [owner project status]
+  (sql/with-connection db
+    (sql/update-values :instances
+                       ["owner = ? AND project = ?" owner project]
+                       {:status status})))
 
 (defn invite [owner project invitee]
   (sql/with-query-results [instance]
@@ -37,6 +44,7 @@
                     [:project :varchar "NOT NULL"]
                     [:ip :varchar]
                     [:description :text]
+                    [:status :varchar]
                     [:at :timestamp "NOT NULL" "DEFAULT CURRENT_TIMESTAMP"])
   (sql/create-table "invites"
                     [:id :serial "PRIMARY KEY"]

@@ -63,6 +63,7 @@
   (GET "/project/:gh-user/:project" {{:keys [username]} :session
                                      {:keys [gh-user project]} :params}
        (html/instance username gh-user project))
+  ;; TODO: status endpoint
   (GET "/oauth" {{:keys [code]} :params session :session}
        (if code
          (let [token (get-token code)

@@ -52,6 +52,7 @@
 
 (defn configure-phase [username project invite]
   (println "Configuring...")
+  (db/status username project "configuring")
   (admin/automated-admin-user "syme" (.getBytes (:public-key env)))
   (println "Adding owner" username)
   (apply admin/automated-admin-user username (get-keys username))
@@ -60,15 +61,24 @@
       (println "Adding invitee" invitee)
       (db/invite username project invitee)
       (apply admin/automated-admin-user invitee (get-keys invitee))))
+  (db/status username project "checking out")
   (actions/package "git")
+  (actions/package "tmux")
   (println "Cloning repo...")
-  (action/with-action-options {:sudo-user username
-                               :script-prefix :no-prefix}
+  (action/with-action-options {:sudo-user username :script-prefix :no-prefix}
     (actions/exec-checked-script
      "Project clone"
      ~(format "sudo -iu %s git clone git://github.com/%s/%s.git"
               username username project)))
+  ;; TODO: set up tmux config and shared wrapper
+  (db/status username project "ready")
   (println "Done!"))
+
+;; TODO: log instance state in DB
+;; * bootstrapped
+;; * configured
+;; * ready
+;; * halted
 
 (defn launch [username {:keys [project invite identity credential]}]
   (force write-key-pair)

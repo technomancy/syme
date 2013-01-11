@@ -69,8 +69,8 @@
 
 (defn instance [username gh-user project-name]
   (sql/with-connection db/db
-    (def iii (db/find username (str gh-user "/" project-name)))
     (if-let [instance (db/find username (str gh-user "/" project-name))]
+      ;; TODO: handle halted state
       (layout
        [:div
         [:h3 (:project instance)]
