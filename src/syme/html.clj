@@ -75,9 +75,12 @@
        [:div
         [:h3 (:project instance)]
         [:p {:id "desc"} (:description instance)]
+        [:hr]
         (if (:ip instance)
-          [:p {:id "ip"} [:tt "ssh " (:ip instance)]]
+          [:p {:id "ip"} [:tt "ssh " username "@" (:ip instance)]]
+          ;; TODO: JS to update status here periodically.
           [:p "Waiting to boot..."])
+        [:hr]
         [:p "Invited:"]
         [:ul {:id "invitations"}
          (for [i (:invitees instance)]

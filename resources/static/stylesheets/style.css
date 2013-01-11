@@ -21,3 +21,18 @@
 #splash {
     margin: 5em;
 }
+
+#ip {
+    margin-left: 4em;
+    font-size: 125%;
+    font-family: Inconsolata, Consolas, monospace;
+}
+
+ul#invitations {
+    list-style-type: square;
+    padding-left: 2em;
+}
+
+div hr {
+    margin: 15px;
+}
