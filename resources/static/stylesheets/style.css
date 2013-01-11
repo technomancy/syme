@@ -1,6 +1,11 @@
+#content.container {
+    width: 600px;
+}
+
 #header h1 {
-    font-family: 'Electrolize', arial, serif;
+    font-family: 'Passion One', arial, serif;
     margin: 0.5em auto;
+    width: 5em;
 }
 
 #header a {
@@ -9,4 +14,10 @@
 
 #footer {
     font-size: 80%;
+    margin: 0.5em auto;
+    text-align: right;
+}
+
+#splash {
+    margin: 5em;
 }

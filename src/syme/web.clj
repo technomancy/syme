@@ -40,36 +40,42 @@
       (:body) (json/decode true) :login))
 
 (defroutes app
-  (ANY "/repl" {:as req}
-       (drawbridge req))
-  (GET "/oauth" [code]
-       (if code
-         (let [token (get-token code)
-               username (get-username token)]
-           (assoc (res/redirect "/")
-             :session {:token token :username username}))
-         {:status 403}))
-  (GET "/logout" []
-       (assoc (res/redirect "/") :session nil))
-  (GET "/launch" {{:keys [username]} :session {:keys [project]} :params}
-       {:headers {"Content-Type" "text/html"}
-        :status 200
-        :body (if username
-                (html/launch-project username project)
-                (res/redirect "/"))})
-  (POST "/launch" {{:keys [username]} :session
-                    params :params}
-        (future (instance/launch username params))
-        (res/redirect (str "/project/" (:project params))))
-  (GET "/project/:project" {{:keys [username]} :session
-                            params :params}
-       (html/project username (:project params)))
   (GET "/" {{:keys [username]} :session}
        {:headers {"Content-Type" "text/html"}
         :status 200
-        :body (if username
-                (html/dash username)
-                (html/splash))})
+        :body (html/splash username)})
+  (GET "/launch" {{:keys [username] :as session} :session
+                  {:keys [project]} :params}
+       (if username
+         {:headers {"Content-Type" "text/html"}
+          :status 200
+          :body (html/launch username (or project (:project session))
+                             (:identity session) (:credential session))}
+         (assoc (res/redirect (str "https://github.com/login/oauth/authorize?"
+                                   "client_id=" (env :oauth-client-id)))
+           :session (merge session merge {:project project}))))
+  (POST "/launch" {{:keys [username] :as session} :session
+                   params :params}
+        (prn :creds (select-keys params
+                                 [:identity :credential]))
+        ;; (future (instance/launch username params))
+        (assoc (res/redirect (str "/project/" (:project params)))
+          :session (merge session (select-keys params
+                                               [:identity :credential]))))
+  (GET "/project/:gh-user/:project" {{:keys [username]} :session
+                                     {:keys [gh-user project]} :params}
+       (html/project username gh-user project))
+  (GET "/oauth" {{:keys [code]} :params session :session}
+       (if code
+         (let [token (get-token code)
+               username (get-username token)]
+           (assoc (res/redirect "/launch")
+             :session (merge session {:token token :username username})))
+         {:status 403}))
+  (GET "/logout" []
+       (assoc (res/redirect "/") :session nil))
+  (ANY "/repl" {:as req}
+       (drawbridge req))
   (ANY "*" []
        (route/not-found (slurp (io/resource "404.html")))))
 
@@ -81,6 +87,14 @@
             :headers {"Content-Type" "text/html"}
             :body (:body (ex-data e) (slurp (io/resource "500.html")))}))))
 
+(defn log [req]
+  #_(println (:request-method req) (:uri req) :session (keys (:session req))))
+
+(defn wrap-logging [handler]
+  (fn [req]
+    (log req)
+    (handler req)))
+
 (defn -main [& [port]]
   (let [port (Integer. (or port (env :port) 5000))
         store (cookie/cookie-store {:key (env :session-secret)})]
@@ -89,6 +103,7 @@
                          ((if (env :production)
                             wrap-error-page
                             trace/wrap-stacktrace))
+                         wrap-logging
                          (site {:session {:store store}}))
                      {:port port :join? false})))
 

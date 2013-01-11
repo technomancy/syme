@@ -5,7 +5,7 @@
             [syme.db :as db]
             [clojure.java.jdbc :as sql]))
 
-(defn layout [body]
+(defn layout [body username]
   (html5
    [:head
     [:meta {:charset "utf-8"}]
@@ -13,52 +13,61 @@
     (include-css "/stylesheets/style.css"
                  "/stylesheets/base.css"
                  "/stylesheets/skeleton.css")
-    (include-css "http://fonts.googleapis.com/css?family=Electrolize")]
+    (include-css "http://fonts.googleapis.com/css?family=Passion+One:700")]
    [:body
     [:div#header
-     [:h1.container
-      [:a {:href "/"} "Syme"]]]
-    [:div#content.container body]]))
+     [:h1.container "Syme"]]
+    [:div#content.container body
+     [:div#footer
+      [:p (if username
+            [:span [:a {:href "/logout"} "Log out"] " | "])
+        "Get " [:a {:href "https://github.com/technomancy/syme"}
+                     "the source"] "."]]]]))
 
-(defn splash []
+(defn splash [username]
   (layout
    [:div
-    ;; TODO: state argument here?
-    [:a {:href (str"https://github.com/login/oauth/authorize?client_id="
-                   (env :oauth-client-id))} "Log in"]]))
+    [:form {:action "/launch" :method :get :id "splash"}
+     [:input {:type :submit :value "Go"
+              :style "float: right;"}]
+     [:input {:type :text :name "project" :value "project name"
+              :style "width: 370px; font-size: 120%; font-weight: bold;"
+              :onfocus "if(this.value==this.defaultValue) this.value='';"
+              :onblur "if(this.value=='') this.value='project name';"}]]
+    ;; TODO: display active instances
+    ] username))
 
-(defn dash [username]
-  (layout
-   [:div
-    [:form {:action "/launch" :method :get}
-     [:input {:type :text :name "project"}]
-     [:input {:type :submit :value "Go"}]]]))
-
-(defn launch-project [username repo-name]
-  (let [repo (repos/specific-repo username repo-name)]
+(defn launch [username repo-name identity credential]
+  (let [repo (apply repos/specific-repo (.split repo-name "/"))]
     (if (:name repo)
       (layout
        [:div
-        [:h3 (:name repo)]
+        [:h3 [:a {:href (:html_url repo)} repo-name]]
         [:p {:id "desc"} (:description repo)]
+        [:hr]
         [:form {:action "/launch" :method :post}
          [:input {:type :hidden :name "project" :value repo-name}]
-         [:p [:label {:for "invite"}
-              "space-separated list of GitHub usernames to invite:"]]
-         [:input {:type :text :size 20 :name "invite" :id "invite"}]
-         [:p [:label {:for "packages"}
-              "space-separated list debian packages to install:"]]
-         [:input {:type :text :size 20 :name "packages" :id "packages"}]
-         [:p [:label {:for "identity"}
-              "AWS Access Key ID"]]
-         [:input {:type :text :size 20 :name "identity" :id "identity"}]
-         [:p [:label {:for "credential"}
-              "AWS Access Secret Key"]]
-         [:input {:type :text :size 20 :name "credential" :id "credential"}]
-         [:input {:type :submit :value "Launch!"}]]])
+         [:input {:type :text :name "invite" :id "invite"
+                  :value "users to invite"
+                  :onfocus "if(this.value==this.defaultValue) this.value='';"
+                  :onblur "if(this.value=='') this.value='users to invite';"}]
+         [:input {:type :text :name "identity" :id "identity"
+                  :value (or identity "AWS Access Key")
+                  :onfocus (if-not identity
+                             "if(this.value==this.defaultValue) this.value='';")
+                  :onblur "if(this.value=='') this.value='AWS Access Key';"}]
+         [:input {:type :text :style "width: 300px"
+                  :name "credential" :id "credential"
+                  :value (or credential "AWS Secret Key")
+                  :onfocus (if-not credential
+                             "if(this.value==this.defaultValue) this.value='';")
+                  :onblur "if(this.value=='') this.value='AWS Secret Key';"}]
+         [:hr]
+         [:input {:type :submit :value "Launch!"}]]]
+       username)
       (throw (ex-info "Repository not found" {:status 404})))))
 
-(defn project [username project-name]
+(defn project [username gh-user project-name]
   (sql/with-connection db/db
     (if-let [project (db/find username project-name)]
       (layout
@@ -71,5 +80,6 @@
         [:p "Invited:"]
         [:ul {:id "invitations"}
          (for [i (:invitees project)]
-           [:li [:a {:href (str "https://github.com/" i)} i]])]])
+           [:li [:a {:href (str "https://github.com/" i)} i]])]]
+       username)
       (throw (ex-info "Repository not found" {:status 404})))))

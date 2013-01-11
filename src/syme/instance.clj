@@ -36,7 +36,7 @@
                  (:body) (.split "\n"))]
     (map (memfn getBytes) keys)))
 
-(defn configure-phase [username project invite packages]
+(defn configure-phase [username project invite]
   (admin/automated-admin-user
    "syme" (.getBytes (:public-key env)))
   (println "Adding owner" username)
@@ -46,8 +46,7 @@
       (println "Adding admin" u)
       (db/invite username project u)
       (apply admin/automated-admin-user u (get-keys u))))
-  (doseq [p (cons "git" (.split packages ",? +"))]
-    (actions/package p))
+  (actions/package "git")
   (action/with-action-options {:sudo-user username
                                :script-prefix :no-prefix}
     (actions/exec-checked-script
@@ -55,8 +54,7 @@
      ~(format "sudo -iu %s git clone git://github.com/%s/%s.git"
               username username project))))
 
-(defn launch [username {:keys [project invite identity credential
-                               packages compute] :as opts}]
+(defn launch [username {:keys [project invite identity credential compute]}]
   (force write-key-pair)
   (alter-var-root #'pallet.core.user/*admin-user* (constantly user))
   (let [group (str username "/" project)]
@@ -71,8 +69,7 @@
                                 (db/project username project "" ip)))
                             (admin/automated-admin-user
                              "syme" (.getBytes (:public-key env))))
-               :configure (partial configure-phase username project
-                                   invite packages)})
+               :configure (partial configure-phase username project invite)})
      :compute (compute/compute-service (or compute "aws-ec2")
                                        :identity identity
                                        :credential credential))))
