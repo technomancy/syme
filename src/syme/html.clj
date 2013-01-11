@@ -28,10 +28,10 @@
   (layout
    [:div
     [:form {:action "/launch" :method :get :id "splash"}
-     [:input {:type :submit :value "Go"
-              :style "float: right;"}]
+     [:input {:type :submit :value "Collaborate on a GitHub project"
+              :style "float: right; margin-top: 2px;"}]
      [:input {:type :text :name "project" :value "user/project"
-              :style "width: 370px; font-size: 115%; font-weight: bold;"
+              :style "width: 220px; font-size: 100%; font-weight: bold;"
               :onfocus "if(this.value==this.defaultValue) this.value='';"
               :onblur "if(this.value=='') this.value='user/project';"}]]
     ;; TODO: display active instances
@@ -56,7 +56,7 @@
                   :onfocus (if-not identity
                              "if(this.value==this.defaultValue) this.value='';")
                   :onblur "if(this.value=='') this.value='AWS Access Key';"}]
-         [:input {:type :text :style "width: 300px"
+         [:input {:type :text :style "width: 320px"
                   :name "credential" :id "credential"
                   :value (or credential "AWS Secret Key")
                   :onfocus (if-not credential
@@ -68,9 +68,9 @@
       (throw (ex-info "Repository not found" {:status 404})))))
 
 (defn status-style [status]
-  (str "color: " ({"ready" "green"
-                   "halted" "red"
-                   "bootstrapping" "orange"} status "yellow")))
+  (str "color: " ({"bootstrapping" "orange"
+                   "ready" "green"
+                   "halted" "red"} status "yellow")))
 
 (defn instance [username gh-user project-name]
   (sql/with-connection db/db

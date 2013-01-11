@@ -18,7 +18,6 @@
             [syme.instance :as instance]))
 
 (defn- authenticated? [user pass]
-  ;; TODO: heroku config:add REPL_USER=[...] REPL_PASSWORD=[...]
   (= [user pass] [(env :repl-user false) (env :repl-password false)]))
 
 (def ^:private drawbridge
@@ -56,6 +55,7 @@
            :session (merge session {:project project}))))
   (POST "/launch" {{:keys [username] :as session} :session
                    params :params}
+        (def ppp params)
         (future (instance/launch username params))
         (assoc (res/redirect (str "/project/" (:project params)))
           :session (merge session (select-keys params
@@ -91,9 +91,7 @@
   #_(println (:request-method req) (:uri req) :session (keys (:session req))))
 
 (defn wrap-logging [handler]
-  (fn [req]
-    (log req)
-    (handler req)))
+  #(handler (doto % log)))
 
 (defn -main [& [port]]
   (let [port (Integer. (or port (env :port) 5000))

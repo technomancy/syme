@@ -5,7 +5,7 @@
 #header h1 {
     font-family: 'Passion One', arial, serif;
     margin: 0.5em auto;
-    width: 5em;
+    width: 4em;
 }
 
 #header a {
@@ -34,10 +34,6 @@ p#ip.halted {
 
 p#ip.bootstrapping {
     color: #333;
-}
-
-p#ip.configuring {
-    color: #222
 }
 
 ul#invitations {

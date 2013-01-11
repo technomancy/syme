@@ -1,6 +1,6 @@
 # Syme
 
-It's a thing.
+Instant collaboration on GitHub projects.
 
 ## License
 

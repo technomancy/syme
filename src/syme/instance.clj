@@ -40,46 +40,33 @@
     (map (memfn getBytes) keys)))
 
 (defn bootstrap-phase [username project repo]
-  (println "Bootstrapping...")
   (let [ip (node/primary-ip (crate/target-node))
         desc (:description @repo)]
     (sql/with-connection db/db
       (db/create username project desc ip)))
-  (println "Creating admin user...")
   (admin/automated-admin-user
-   "syme" (.getBytes (:public-key env)))
-  (println "Done bootstrapping."))
+   "syme" (.getBytes (:public-key env))))
 
 (defn configure-phase [username project invite]
-  (println "Configuring...")
-  (db/status username project "configuring")
   (admin/automated-admin-user "syme" (.getBytes (:public-key env)))
-  (println "Adding owner" username)
   (apply admin/automated-admin-user username (get-keys username))
   (sql/with-connection db/db
     (doseq [invitee (.split invite ",? +")]
-      (println "Adding invitee" invitee)
       (db/invite username project invitee)
       (apply admin/automated-admin-user invitee (get-keys invitee))))
-  (db/status username project "checking out")
   (actions/package "git")
   (actions/package "tmux")
-  (println "Cloning repo...")
-  ;; TODO: this doesn't work
   (action/with-action-options {:sudo-user username :script-prefix :no-prefix}
     (actions/exec-checked-script
      "Project clone"
      ~(format "sudo -iu %s git clone git://github.com/%s/%s.git"
               username username project)))
-  ;; TODO: set up tmux config and shared wrapper
-  (db/status username project "ready")
-  (println "Done!"))
-
-;; TODO: log instance state in DB
-;; * bootstrapped
-;; * configured
-;; * ready
-;; * halted
+  (actions/remote-file "/etc/tmux.conf"
+                       :content (slurp (io/resource "tmux.conf")))
+  (actions/remote-file "/etc/motd"
+                       :content (slurp (io/resource "motd")))
+  (actions/remote-file "/usr/local/bin/syme"
+                       :content (slurp (io/resource "syme")) :mode "0755"))
 
 (defn launch [username {:keys [project invite identity credential]}]
   (force write-key-pair)
@@ -87,13 +74,16 @@
   (let [group (str username "/" project)
         repo (future (apply repos/specific-repo (.split project "/")))]
     (println "Converging" group "...")
-    (pallet/converge
-     (pallet/group-spec
-      group, :count 1
-      :node-spec (pallet/node-spec :image {:os-family :ubuntu
-                                           :image-id "us-east-1/ami-3c994355"})
-      :phases {:bootstrap (partial bootstrap-phase username project repo)
-               :configure (partial configure-phase username project invite)})
-     :compute (compute/compute-service "aws-ec2"
-                                       :identity identity
-                                       :credential credential))))
+    @(pallet/converge
+      (pallet/group-spec
+       group, :count 1
+       :node-spec (pallet/node-spec :image {:os-family :ubuntu
+                                            :image-id "us-east-1/ami-3c994355"})
+       :phases {:bootstrap (partial bootstrap-phase username project repo)
+                :configure (partial configure-phase username project invite)})
+      :compute (compute/compute-service "aws-ec2"
+                                        :identity identity
+                                        :credential credential)))
+  ;; if we want more granular status:
+  ;; <hugod> pallet.event - the log-publisher is what logs the phase functions
+  (db/status username project "ready"))
