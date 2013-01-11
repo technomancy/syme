@@ -51,15 +51,19 @@
          {:status 403}))
   (GET "/logout" []
        (assoc (res/redirect "/") :session nil))
-  (GET "/project" {{:keys [username]} :session {:keys [project]} :params}
+  (GET "/launch" {{:keys [username]} :session {:keys [project]} :params}
        {:headers {"Content-Type" "text/html"}
         :status 200
         :body (if username
-                (html/project username project)
+                (html/launch-project username project)
                 (res/redirect "/"))})
-  (POST "/project" {{:keys [username]} :session
+  (POST "/launch" {{:keys [username]} :session
                     params :params}
-        (instance/launch username params))
+        (future (instance/launch username params))
+        (res/redirect (str "/project/" (:project params))))
+  (GET "/project/:project" {{:keys [username]} :session
+                            params :params}
+       (html/project username (:project params)))
   (GET "/" {{:keys [username]} :session}
        {:headers {"Content-Type" "text/html"}
         :status 200

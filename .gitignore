@@ -11,3 +11,4 @@ pom.xml
 /data
 /logs
 /.lein-repl-history
+/pg

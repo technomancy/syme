@@ -4,12 +4,16 @@
             [pallet.actions :as actions]
             [pallet.action :as action]
             [pallet.compute :as compute]
+            [pallet.node :as node]
             [pallet.crate :as crate]
+            [pallet.core.session :as session]
             [pallet.crate.automated-admin-user :as admin]
             [pallet.phase :as phase]
             [clj-http.client :as http]
             [environ.core :refer [env]]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.java.jdbc :as sql]
+            [syme.db :as db]))
 
 (def pubkey (str (io/file (System/getProperty "user.dir")
                           "data" "keys" "syme.pub")))
@@ -35,9 +39,13 @@
 (defn configure-phase [username project invite packages]
   (admin/automated-admin-user
    "syme" (.getBytes (:public-key env)))
-  (doseq [u (cons username (.split invite ",? +"))]
-    (println "Adding admin" u)
-    (apply admin/automated-admin-user u (get-keys u)))
+  (println "Adding owner" username)
+  (apply admin/automated-admin-user username (get-keys username))
+  (sql/with-connection db/db
+    (doseq [u (.split invite ",? +")]
+      (println "Adding admin" u)
+      (db/invite username project u)
+      (apply admin/automated-admin-user u (get-keys u))))
   (doseq [p (cons "git" (.split packages ",? +"))]
     (actions/package p))
   (action/with-action-options {:sudo-user username
@@ -58,7 +66,12 @@
       :node-spec (pallet/node-spec :image {:os-family :ubuntu
                                            :image-id "us-east-1/ami-3c994355"})
       :phases {:bootstrap (fn []
-                            ;; (crate/primary-ip (first (crate/nodes-for-group group)))
+                            (let [[node] (session/nodes-in-group
+                                          session/*session* group)
+                                  ;; TODO: we don't get actual nodes here yet
+                                  ip (try (node/primary-ip node) (catch Exception _))]
+                              (sql/with-connection db/db
+                                (db/project username project "" ip)))
                             (admin/automated-admin-user
                              "syme" (.getBytes (:public-key env))))
                :configure (partial configure-phase username project

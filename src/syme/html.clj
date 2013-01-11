@@ -1,7 +1,9 @@
 (ns syme.html
   (:require [hiccup.page :refer [html5 doctype include-css]]
             [environ.core :refer [env]]
-            [tentacles.repos :as repos]))
+            [tentacles.repos :as repos]
+            [syme.db :as db]
+            [clojure.java.jdbc :as sql]))
 
 (defn layout [body]
   (html5
@@ -28,18 +30,18 @@
 (defn dash [username]
   (layout
    [:div
-    [:form {:action "/project" :method :get}
+    [:form {:action "/launch" :method :get}
      [:input {:type :text :name "project"}]
      [:input {:type :submit :value "Go"}]]]))
 
-(defn project [username repo-name]
+(defn launch-project [username repo-name]
   (let [repo (repos/specific-repo username repo-name)]
     (if (:name repo)
       (layout
        [:div
         [:h3 (:name repo)]
         [:p {:id "desc"} (:description repo)]
-        [:form {:action "/project" :method :post}
+        [:form {:action "/launch" :method :post}
          [:input {:type :hidden :name "project" :value repo-name}]
          [:p [:label {:for "invite"}
               "space-separated list of GitHub usernames to invite:"]]
@@ -54,4 +56,20 @@
               "AWS Access Secret Key"]]
          [:input {:type :text :size 20 :name "credential" :id "credential"}]
          [:input {:type :submit :value "Launch!"}]]])
+      (throw (ex-info "Repository not found" {:status 404})))))
+
+(defn project [username project-name]
+  (sql/with-connection db/db
+    (if-let [project (db/find username project-name)]
+      (layout
+       [:div
+        [:h3 (:name project)]
+        [:p {:id "desc"} (:description project)]
+        (if (:ip project)
+          [:p {:id "ip"} "IP: " (:ip project)]
+          [:p {:id "ip"} "Waiting to boot..."])
+        [:p "Invited:"]
+        [:ul {:id "invitations"}
+         (for [i (:invitees project)]
+           [:li [:a {:href (str "https://github.com/" i)} i]])]])
       (throw (ex-info "Repository not found" {:status 404})))))
