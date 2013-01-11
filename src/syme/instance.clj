@@ -65,6 +65,7 @@
   (actions/package "git")
   (actions/package "tmux")
   (println "Cloning repo...")
+  ;; TODO: this doesn't work
   (action/with-action-options {:sudo-user username :script-prefix :no-prefix}
     (actions/exec-checked-script
      "Project clone"

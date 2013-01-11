@@ -32,6 +32,14 @@ p#ip.halted {
     text-decoration: line-through;
 }
 
+p#ip.bootstrapping {
+    color: #333;
+}
+
+p#ip.configuring {
+    color: #222
+}
+
 ul#invitations {
     list-style-type: square;
     padding-left: 2em;
