@@ -28,8 +28,10 @@
 (def write-key-pair
   (delay
    (.mkdirs (io/file "data" "keys"))
-   (io/copy (.getBytes (env :private-key)) (io/file privkey))
-   (io/copy (.getBytes (env :public-key)) (io/file pubkey))))
+   (io/copy (.getBytes (.replaceAll (env :private-key) "\\\\n" "\n"))
+            (io/file privkey))
+   (io/copy (.getBytes (env :public-key))
+            (io/file pubkey))))
 
 (defn get-keys [username]
   (let [keys (-> (http/get (format "https://github.com/%s.keys" username))
