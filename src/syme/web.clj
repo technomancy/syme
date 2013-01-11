@@ -83,6 +83,7 @@
   (fn [req]
     (try (handler req)
          (catch Exception e
+           (.printStackTrace e)
            {:status (:status (ex-data e) 500)
             :headers {"Content-Type" "text/html"}
             :body (:body (ex-data e) (slurp (io/resource "500.html")))}))))

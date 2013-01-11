@@ -30,10 +30,10 @@
     [:form {:action "/launch" :method :get :id "splash"}
      [:input {:type :submit :value "Go"
               :style "float: right;"}]
-     [:input {:type :text :name "project" :value "project name"
-              :style "width: 370px; font-size: 120%; font-weight: bold;"
+     [:input {:type :text :name "project" :value "user/project"
+              :style "width: 370px; font-size: 115%; font-weight: bold;"
               :onfocus "if(this.value==this.defaultValue) this.value='';"
-              :onblur "if(this.value=='') this.value='project name';"}]]
+              :onblur "if(this.value=='') this.value='user/project';"}]]
     ;; TODO: display active instances
     ] username))
 
