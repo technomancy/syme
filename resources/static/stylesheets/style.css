@@ -28,6 +28,10 @@
     font-family: Inconsolata, Consolas, monospace;
 }
 
+p#ip.halted {
+    text-decoration: line-through;
+}
+
 ul#invitations {
     list-style-type: square;
     padding-left: 2em;
@@ -35,4 +39,10 @@ ul#invitations {
 
 div hr {
     margin: 15px;
+}
+
+div p#status {
+    padding: 15px;
+    float: right;
+    font-weight: bold;
 }

@@ -67,19 +67,26 @@
        username)
       (throw (ex-info "Repository not found" {:status 404})))))
 
+(defn status-style [status]
+  (str "color: " ({"ready" "green"
+                   "halted" "red"
+                   "bootstrapping" "orange"} status "yellow")))
+
 (defn instance [username gh-user project-name]
   (sql/with-connection db/db
     (if-let [instance (db/find username (str gh-user "/" project-name))]
-      ;; TODO: handle halted state
       (layout
        [:div
+        [:p {:id "status" :style (status-style  (:status instance))}
+         (:status instance)]
         [:h3 (:project instance)]
         [:p {:id "desc"} (:description instance)]
         [:hr]
         (if (:ip instance)
-          [:p {:id "ip"} [:tt "ssh " username "@" (:ip instance)]]
+          [:p {:id "ip" :class (:status instance)}
+           [:tt "ssh " username "@" (:ip instance)]]
           ;; TODO: JS to update status here periodically.
-          [:p "Waiting to boot..."])
+          [:p "Waiting to boot... refresh in a minute or two."])
         [:hr]
         [:p "Invited:"]
         [:ul {:id "invitations"}
