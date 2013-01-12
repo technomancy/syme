@@ -50,8 +50,8 @@
       (doseq [invitee users]
         (db/invite username project invitee)))
     (apply admin/automated-admin-user
-           "syme" (concat [(.getBytes (:public-key env))]
-                          (mapcat get-keys users)))))
+           "syme" (cons (.getBytes (:public-key env))
+                        (mapcat get-keys users)))))
 
 (defn configure-phase [username project gh-user]
   (actions/package "git")

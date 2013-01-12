@@ -15,6 +15,7 @@
             [clj-http.client :as http]
             [cheshire.core :as json]
             [syme.html :as html]
+            [syme.db :as db]
             [syme.instance :as instance]))
 
 (defn- authenticated? [user pass]
@@ -63,7 +64,14 @@
   (GET "/project/:gh-user/:project" {{:keys [username]} :session
                                      {:keys [gh-user project]} :params}
        (html/instance username gh-user project))
-  ;; TODO: status endpoint
+  ;; for polling from JS on instance page
+  (GET "/project/:gh-user/:project/status" {{:keys [gh-user project]} :params
+                                            {:keys [username]} :session}
+       (if-let [instance (db/find username (str gh-user "/" project))]
+         {:status 200
+          :headers {"Content-Type" "application/json"}
+          :body (json/encode instance)}
+         (throw (ex-info "Repository not found" {:status 404}))))
   (GET "/oauth" {{:keys [code]} :params session :session}
        (if code
          (let [token (get-token code)
