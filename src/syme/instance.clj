@@ -55,35 +55,58 @@
       (db/invite username project invitee)
       (apply admin/automated-admin-user invitee (get-keys invitee))))
   (actions/package "git")
-  (actions/package "tmux")
-  (action/with-action-options {:sudo-user username :script-prefix :no-prefix}
+  (action/with-action-options {:sudo-user username}
     (actions/exec-checked-script
      "Project clone"
-     ~(format "sudo -iu %s git clone git://github.com/%s/%s.git"
+     ~(format "git clone git://github.com/%s/%s.git"
               username username project)))
-  (actions/remote-file "/etc/tmux.conf"
-                       :content (slurp (io/resource "tmux.conf")))
   (actions/remote-file "/etc/motd"
                        :content (slurp (io/resource "motd")))
-  (actions/remote-file "/usr/local/bin/syme"
-                       :content (slurp (io/resource "syme")) :mode "0755"))
+  (actions/remote-file "/etc/tmux.conf"
+                       :content (slurp (io/resource "tmux.conf")))
+  (actions/package "tmux"))
 
 (defn launch [username {:keys [project invite identity credential]}]
-  (force write-key-pair)
-  (alter-var-root #'pallet.core.user/*admin-user* (constantly admin-user))
   (let [group (str username "/" project)
         repo (future (apply repos/specific-repo (.split project "/")))]
     (println "Converging" group "...")
+    (let [result (pallet/converge
+                  (pallet/group-spec
+                   group, :count 1
+                   :node-spec (pallet/node-spec
+                               :image {:os-family :ubuntu
+                                       :image-id "us-east-1/ami-3c994355"})
+                   :phases {:bootstrap (partial bootstrap-phase
+                                                username project repo)
+                            :configure (partial configure-phase
+                                                username project invite)})
+                  :user admin-user
+                  :compute (compute/compute-service "aws-ec2"
+                                                    :identity identity
+                                                    :credential credential))]
+      @result
+      (if (pallet.algo.fsmop/failed? result)
+        (do
+          (if-let [e (:exception @result)]
+            (clojure.stacktrace/print-cause-trace e)
+            (println @result))
+          (println "converge failed"))
+        ;; if we want more granular status:
+        ;; <hugod> pallet.event - the log-publisher is what logs the phase fns
+        (db/status username project "ready")))))
+
+(defn destroy [username {:keys [project invite identity credential]}]
+  (let [group (str username "/" project)]
+    (println "Destroying" group "...")
     @(pallet/converge
       (pallet/group-spec
-       group, :count 1
-       :node-spec (pallet/node-spec :image {:os-family :ubuntu
-                                            :image-id "us-east-1/ami-3c994355"})
-       :phases {:bootstrap (partial bootstrap-phase username project repo)
-                :configure (partial configure-phase username project invite)})
+       group, :count 0)
       :compute (compute/compute-service "aws-ec2"
                                         :identity identity
-                                        :credential credential)))
-  ;; if we want more granular status:
-  ;; <hugod> pallet.event - the log-publisher is what logs the phase functions
-  (db/status username project "ready"))
+                                        :credential credential))))
+
+(defn nodes [username {:keys [project invite identity credential]}]
+  (pallet.compute/nodes
+   (compute/compute-service "aws-ec2"
+                            :identity identity
+                            :credential credential)))
