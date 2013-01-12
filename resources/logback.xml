@@ -1,7 +1,12 @@
 <configuration scan="true" scanPeriod="1 seconds" debug="false">
+  <!-- <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" /> -->
+
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>INFO</level>
+    </filter>
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{20} - %msg%n</pattern>
     </encoder>
   </appender>
 
@@ -49,23 +54,45 @@
     </encoder>
   </appender>
 
-  <logger name="jclouds.headers" level="INFO">
+  <appender name="SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+    <discriminator>
+      <key>target</key>
+      <defaultValue>unspecified</defaultValue>
+    </discriminator>
+    <sift>
+      <appender name="FILE-${target}" class="ch.qos.logback.core.FileAppender">
+        <file>logs/target-${target}.log</file>
+        <append>false</append>
+        <encoder>
+          <pattern>%msg%n</pattern>
+        </encoder>
+      </appender>
+    </sift>
+  </appender>
+
+  <logger name="jclouds.headers" level="DEBUG">
     <appender-ref ref="WIREFILE" />
   </logger>
 
-  <logger name="jclouds.wire" level="INFO">
+  <logger name="jclouds.wire" level="DEBUG">
     <appender-ref ref="WIREFILE" />
   </logger>
 
-  <logger name="jclouds.compute" level="INFO">
+  <logger name="jclouds.compute" level="DEBUG">
     <appender-ref ref="COMPUTEFILE" />
   </logger>
 
-  <logger name="jclouds.ssh" level="INFO">
+  <logger name="jclouds.ssh" level="DEBUG">
     <appender-ref ref="COMPUTEFILE" />
   </logger>
 
   <logger name="pallet" level="DEBUG">
+    <appender-ref ref="SIFT" />
+    <appender-ref ref="PALLETFILE" />
+  </logger>
+
+  <logger name="palletops" level="DEBUG">
+    <appender-ref ref="SIFT" />
     <appender-ref ref="PALLETFILE" />
   </logger>
 
@@ -73,8 +100,23 @@
     <appender-ref ref="VMFESTFILE" />
   </logger>
 
-  <root level="INFO">
+  <logger name="pallet.actions.direct.package" level="TRACE"/>
+  <logger name="pallet.crate-install" level="TRACE"/>
+  <logger name="pallet.execute" level="TRACE"/>
+
+  <logger name="net.schmizz" level="WARN"/>
+  <logger name="clj-ssh" level="DEBUG"/>
+  <logger name="pallet.action-plan" level="DEBUG"/>
+  <logger name="pallet.algo.fsm" level="WARN"/>
+  <logger name="pallet.algo.fsmop" level="WARN"/>
+  <logger name="pallet.core.primitives" level="DEBUG"/>
+  <!-- <logger name="pallet.execute.default-executor" level="TRACE"/> -->
+
+  <logger name="palletops.crate.hadoop.base" level="TRACE"/>
+
+  <root level="DEBUG">
     <appender-ref ref="CONSOLE" />
   </root>
+
 
 </configuration>
