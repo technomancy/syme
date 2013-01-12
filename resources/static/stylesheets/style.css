@@ -49,6 +49,7 @@ p#ip.bootstrapping {
 ul#users li {
     float: left;
     margin-right: 15px;
+    margin-top: 10px;
 }
 
 div hr {
@@ -59,4 +60,20 @@ div p#status {
     padding: 15px;
     float: right;
     font-weight: bold;
+}
+
+div p#status.bootstrapping {
+    color: orange;
+}
+
+div p#status.halted {
+    color: red;
+}
+
+div p#status.failed {
+    color: brown;
+}
+
+div p#status.ready {
+    color: green;
 }

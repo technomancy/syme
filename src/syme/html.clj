@@ -68,35 +68,34 @@
        username repo-name)
       (throw (ex-info "Repository not found" {:status 404})))))
 
-(defn status-style [status]
-  (str "color: " ({"bootstrapping" "orange"
-                   "ready" "green"
-                   "halted" "red"
-                   "failed" "brown"} status "yellow")))
-
 (defonce icon (memoize (comp :avatar_url users/user)))
 
 (defn instance [username gh-user project-name]
+  ;; TODO: check login
   (sql/with-connection db/db
     (if-let [instance (db/find username (str gh-user "/" project-name))]
-      (layout
-       [:div
-        [:p {:id "status" :style (status-style  (:status instance))}
-         (:status instance)]
-        [:h3.project [:a {:href (format "https://github.com/%s/%s"
-                                        gh-user project-name)}
-                      (str gh-user "/" project-name)]]
-        [:p {:id "desc"} (:description instance)]
-        [:hr]
-        (if (:ip instance)
-          [:p {:id "ip" :class (:status instance)}
-           [:tt "ssh syme@" (:ip instance)]]
-          ;; TODO: JS to update status here periodically.
-          [:p "Waiting to boot... refresh in a minute or two."])
-        [:hr]
-        [:ul {:id "users"}
-         (for [u (:invitees instance)]
-           [:li [:a {:href (str "https://github.com/" u)}
-                 [:img {:src (icon u) :alt u :title u}]]])]]
-       username (str gh-user "/" project-name))
+      (let [project (str gh-user "/" project-name)]
+        (layout
+         [:div
+          [:p {:id "status" :class (:status instance)}
+           (:status instance)]
+          [:h3.project [:a {:href (format "https://github.com/%s" project)}
+                        project]]
+          [:p {:id "desc"} (:description instance)]
+          [:hr]
+          (if (:ip instance)
+            [:p {:id "ip" :class (:status instance)}
+             [:tt "ssh syme@" (:ip instance)]]
+            ;; TODO: JS to update status here periodically.
+            [:p "Waiting to boot... refresh in a minute or two."])
+          [:hr]
+          [:ul {:id "users"}
+           (for [u (:invitees instance)]
+             [:li [:a {:href (str "https://github.com/" u)}
+                   [:img {:src (icon u) :alt u :title u}]]])]
+          [:script {:type "text/javascript", :src "/syme.js"
+                    :onload (if (:ip instance)
+                              (format "watch_status('%s')" project)
+                              (format "wait_for_boot('%s')" project))}]]
+         username project))
       (throw (ex-info "Repository not found" {:status 404})))))

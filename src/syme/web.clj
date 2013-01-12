@@ -68,7 +68,7 @@
   (GET "/project/:gh-user/:project/status" {{:keys [gh-user project]} :params
                                             {:keys [username]} :session}
        (if-let [instance (db/find username (str gh-user "/" project))]
-         {:status 200
+         {:status (if (:ip instance) 200 202)
           :headers {"Content-Type" "application/json"}
           :body (json/encode instance)}
          (throw (ex-info "Repository not found" {:status 404}))))
