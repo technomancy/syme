@@ -8,11 +8,21 @@
     width: 4em;
 }
 
+h3.project {
+    font-family: 'Inconsolata', 'Monaco', monospace;
+    font-weight: bold; /* ignored, huh? */
+}
+
+h3.project a {
+    text-decoration: none;
+}
+
 #header a {
     text-decoration: none;
 }
 
 #footer {
+    clear: both;
     font-size: 80%;
     margin: 0.5em auto;
     text-align: right;
@@ -36,13 +46,13 @@ p#ip.bootstrapping {
     color: #333;
 }
 
-ul#invitations {
-    list-style-type: square;
-    padding-left: 2em;
+ul#users li {
+    float: left;
+    margin-right: 15px;
 }
 
 div hr {
-    margin: 15px;
+    margin: 15px 0;
 }
 
 div p#status {

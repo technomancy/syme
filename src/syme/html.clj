@@ -2,14 +2,15 @@
   (:require [hiccup.page :refer [html5 doctype include-css]]
             [environ.core :refer [env]]
             [tentacles.repos :as repos]
+            [tentacles.users :as users]
             [syme.db :as db]
             [clojure.java.jdbc :as sql]))
 
-(defn layout [body username]
+(defn layout [body username & [project]]
   (html5
    [:head
     [:meta {:charset "utf-8"}]
-    [:title "Syme"]
+    [:title (if project (str project " - Syme") "Syme")]
     (include-css "/stylesheets/style.css"
                  "/stylesheets/base.css"
                  "/stylesheets/skeleton.css")
@@ -42,7 +43,7 @@
     (if (:name repo)
       (layout
        [:div
-        [:h3 [:a {:href (:html_url repo)} repo-name]]
+        [:h3.project [:a {:href (:html_url repo)} repo-name]]
         [:p {:id "desc"} (:description repo)]
         [:hr]
         [:form {:action "/launch" :method :post}
@@ -64,13 +65,15 @@
                   :onblur "if(this.value=='') this.value='AWS Secret Key';"}]
          [:hr]
          [:input {:type :submit :value "Launch!"}]]]
-       username)
+       username repo-name)
       (throw (ex-info "Repository not found" {:status 404})))))
 
 (defn status-style [status]
   (str "color: " ({"bootstrapping" "orange"
                    "ready" "green"
                    "halted" "red"} status "yellow")))
+
+(defonce icon (memoize (comp :avatar_url users/user)))
 
 (defn instance [username gh-user project-name]
   (sql/with-connection db/db
@@ -79,7 +82,9 @@
        [:div
         [:p {:id "status" :style (status-style  (:status instance))}
          (:status instance)]
-        [:h3 (:project instance)]
+        [:h3.project [:a {:href (format "https://github.com/%s/%s"
+                                        gh-user project-name)}
+                      (str gh-user "/" project-name)]]
         [:p {:id "desc"} (:description instance)]
         [:hr]
         (if (:ip instance)
@@ -88,9 +93,11 @@
           ;; TODO: JS to update status here periodically.
           [:p "Waiting to boot... refresh in a minute or two."])
         [:hr]
-        [:p "Invited:"]
-        [:ul {:id "invitations"}
+        [:ul {:id "users"}
+         [:li [:a {:href (str "https://github.com/" username)}
+               [:img {:src (icon username) :alt username :title username}]]]
          (for [i (:invitees instance)]
-           [:li [:a {:href (str "https://github.com/" i)} i]])]]
-       username)
+           [:li [:a {:href (str "https://github.com/" i)}
+                 [:img {:src (icon i) :alt i :title i}]]])]]
+       username (str gh-user "/" project-name))
       (throw (ex-info "Repository not found" {:status 404})))))
