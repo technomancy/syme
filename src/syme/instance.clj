@@ -23,6 +23,10 @@
 (def privkey (str (io/file (System/getProperty "user.dir")
                            "data" "keys" "syme")))
 
+(def admin-user (api/make-user "syme"
+                               :public-key-path pubkey
+                               :private-key-path privkey))
+
 (def write-key-pair
   (delay
    (.mkdirs (io/file "data" "keys"))
