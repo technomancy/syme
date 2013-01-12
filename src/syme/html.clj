@@ -89,15 +89,13 @@
         [:hr]
         (if (:ip instance)
           [:p {:id "ip" :class (:status instance)}
-           [:tt "ssh " username "@" (:ip instance)]]
+           [:tt "ssh syme@" (:ip instance)]]
           ;; TODO: JS to update status here periodically.
           [:p "Waiting to boot... refresh in a minute or two."])
         [:hr]
         [:ul {:id "users"}
-         [:li [:a {:href (str "https://github.com/" username)}
-               [:img {:src (icon username) :alt username :title username}]]]
-         (for [i (:invitees instance)]
-           [:li [:a {:href (str "https://github.com/" i)}
-                 [:img {:src (icon i) :alt i :title i}]]])]]
+         (for [u (cons username (:invitees instance))]
+           [:li [:a {:href (str "https://github.com/" u)}
+                 [:img {:src (icon u) :alt u :title u}]]])]]
        username (str gh-user "/" project-name))
       (throw (ex-info "Repository not found" {:status 404})))))

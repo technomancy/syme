@@ -23,10 +23,6 @@
 (def privkey (str (io/file (System/getProperty "user.dir")
                            "data" "keys" "syme")))
 
-(def admin-user (api/make-user "syme"
-                               :public-key-path pubkey
-                               :private-key-path privkey))
-
 (def write-key-pair
   (delay
    (.mkdirs (io/file "data" "keys"))
@@ -40,28 +36,25 @@
                  (:body) (.split "\n"))]
     (map (memfn getBytes) keys)))
 
-(defn bootstrap-phase [username project repo]
+(defn bootstrap-phase [username project repo invite]
   (let [ip (node/primary-ip (crate/target-node))
-        desc (:description @repo)]
+        desc (:description @repo)
+        ;; TODO: move this logic
+        users (cons username (.split invite ",? +"))]
     (sql/with-connection db/db
-      (db/create username project desc ip)))
-  (admin/automated-admin-user
-   "syme" (.getBytes (:public-key env))))
+      (db/create username project desc ip)
+      (doseq [invitee users]
+        (db/invite username project invitee)))
+    (apply admin/automated-admin-user
+           "syme" (concat [(.getBytes (:public-key env))]
+                          (mapcat get-keys users)))))
 
-(defn configure-phase [username project invite gh-user]
-  (admin/automated-admin-user "syme" (.getBytes (:public-key env)))
-  (apply admin/automated-admin-user username (get-keys username))
-  (sql/with-connection db/db
-    (doseq [invitee (.split invite ",? +")]
-      (db/invite username project invitee)
-      (apply admin/automated-admin-user invitee (get-keys invitee))))
+(defn configure-phase [username project gh-user]
   (actions/package "git")
-  (action/with-action-options {:sudo-user username}
+  (action/with-action-options {:sudo-user "syme"}
     (actions/exec-checked-script
      "Project clone"
-     ~(format "git clone git://github.com/%s/%s.git"
-              username username project)))
-  (action/with-action-options {:sudo-user username}
+     ~(format "git clone git://github.com/%s/%s.git" username project))
     (actions/exec-checked-script
      "gitconfig"
      ~(format "git config --global %s '%s'; git config --global %s '%s'"
@@ -84,9 +77,9 @@
                                :image {:os-family :ubuntu
                                        :image-id "us-east-1/ami-3c994355"})
                    :phases {:bootstrap (partial bootstrap-phase username
-                                                project repo)
+                                                project repo invite)
                             :configure (partial configure-phase username
-                                                project invite gh-user)})
+                                                project gh-user)})
                   :user admin-user
                   :compute (compute/compute-service "aws-ec2"
                                                     :identity identity
