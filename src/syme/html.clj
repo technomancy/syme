@@ -95,7 +95,7 @@
           [:p "Waiting to boot... refresh in a minute or two."])
         [:hr]
         [:ul {:id "users"}
-         (for [u (cons username (:invitees instance))]
+         (for [u (:invitees instance)]
            [:li [:a {:href (str "https://github.com/" u)}
                  [:img {:src (icon u) :alt u :title u}]]])]]
        username (str gh-user "/" project-name))
