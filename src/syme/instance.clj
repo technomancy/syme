@@ -58,11 +58,12 @@
   (action/with-action-options {:sudo-user "syme"}
     (actions/exec-checked-script
      "Project clone"
-     ~(format "git clone git://github.com/%s/%s.git" username project))
+     ~(format "git clone git://github.com/%s.git" project))
     (actions/exec-checked-script
      "gitconfig"
      ~(format "git config --global %s '%s'; git config --global %s '%s'"
               "user.email" (:email @gh-user) "user.name" (:name @gh-user))))
+  ;; TODO: this file is always empty
   (actions/remote-file "/etc/motd"
                        :content (slurp (io/resource "motd")))
   (actions/remote-file "/etc/tmux.conf"
@@ -110,7 +111,7 @@
                                         :identity identity
                                         :credential credential))))
 
-(defn nodes [username {:keys [project invite identity credential]}]
+(defn nodes [identity credential]
   (pallet.compute/nodes
    (compute/compute-service "aws-ec2"
                             :identity identity
