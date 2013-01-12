@@ -12,6 +12,7 @@
             [clj-http.client :as http]
             [environ.core :refer [env]]
             [tentacles.repos :as repos]
+            [tentacles.users :as users]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
             [syme.db :as db]))
@@ -47,7 +48,7 @@
   (admin/automated-admin-user
    "syme" (.getBytes (:public-key env))))
 
-(defn configure-phase [username project invite]
+(defn configure-phase [username project invite gh-user]
   (admin/automated-admin-user "syme" (.getBytes (:public-key env)))
   (apply admin/automated-admin-user username (get-keys username))
   (sql/with-connection db/db
@@ -60,6 +61,11 @@
      "Project clone"
      ~(format "git clone git://github.com/%s/%s.git"
               username username project)))
+  (action/with-action-options {:sudo-user username}
+    (actions/exec-checked-script
+     "gitconfig"
+     ~(format "git config --global %s '%s'; git config --global %s '%s'"
+              "user.email" (:email @gh-user) "user.name" (:name @gh-user))))
   (actions/remote-file "/etc/motd"
                        :content (slurp (io/resource "motd")))
   (actions/remote-file "/etc/tmux.conf"
@@ -68,6 +74,7 @@
 
 (defn launch [username {:keys [project invite identity credential]}]
   (let [group (str username "/" project)
+        gh-user (future (users/user username))
         repo (future (apply repos/specific-repo (.split project "/")))]
     (println "Converging" group "...")
     (let [result (pallet/converge
@@ -76,10 +83,10 @@
                    :node-spec (pallet/node-spec
                                :image {:os-family :ubuntu
                                        :image-id "us-east-1/ami-3c994355"})
-                   :phases {:bootstrap (partial bootstrap-phase
-                                                username project repo)
-                            :configure (partial configure-phase
-                                                username project invite)})
+                   :phases {:bootstrap (partial bootstrap-phase username
+                                                project repo)
+                            :configure (partial configure-phase username
+                                                project invite gh-user)})
                   :user admin-user
                   :compute (compute/compute-service "aws-ec2"
                                                     :identity identity
