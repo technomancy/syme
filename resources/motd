@@ -5,7 +5,7 @@
 /____/\__, /_/ /_/ /_/\___/
      /____/
 
-Welcome! Run `syme` to join a shared session.
+Run `tmux` to start a shared session or `tmux attach` to join.
 
 When you are done with this node, run `sudo halt` but make sure you've
 pushed all your work as it will be gone when the node halts.

@@ -94,7 +94,8 @@
           (if-let [e (:exception @result)]
             (clojure.stacktrace/print-cause-trace e)
             (println @result))
-          (println "converge failed"))
+          (println "converge failed")
+          (db/status username project "failed"))
         ;; if we want more granular status:
         ;; <hugod> pallet.event - the log-publisher is what logs the phase fns
         (db/status username project "ready")))))

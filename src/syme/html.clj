@@ -71,7 +71,8 @@
 (defn status-style [status]
   (str "color: " ({"bootstrapping" "orange"
                    "ready" "green"
-                   "halted" "red"} status "yellow")))
+                   "halted" "red"
+                   "failed" "brown"} status "yellow")))
 
 (defonce icon (memoize (comp :avatar_url users/user)))
 
