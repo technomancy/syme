@@ -62,6 +62,8 @@
                        :content (slurp (io/resource "motd")))
   (actions/remote-file "/etc/tmux.conf"
                        :content (slurp (io/resource "tmux.conf")))
+  (actions/remote-file "/usr/bin/local/add-github-user" :mode "0755"
+                       :content (slurp (io/resource "add-github-user")))
   (actions/package "tmux"))
 
 (defn launch [username {:keys [project invite identity credential]}]
