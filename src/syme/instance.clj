@@ -43,8 +43,9 @@
 (defn bootstrap-phase [username project repo invite]
   (let [ip (node/primary-ip (crate/target-node))
         desc (:description @repo)
-        ;; TODO: move this logic
+        invite (if (= invite "users to invite") "" invite)
         users (cons username (.split invite ",? +"))]
+    ;; TODO: move this logic
     (sql/with-connection db/db
       (db/create username project desc ip)
       (doseq [invitee users]
