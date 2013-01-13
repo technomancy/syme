@@ -24,6 +24,9 @@ var update_status = function (request, project) {
             document.getElementById("status").innerHTML = data.status;
             document.getElementById("status").className = data.status;
             setTimeout(function() { watch_status(project); }, 2000);
+            // TODO: update ip if halted
+            // TODO: disable terminate button if halted
+            // TODO: update invited list?
         }
     }
 };

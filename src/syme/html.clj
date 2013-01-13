@@ -81,6 +81,7 @@
       [:div
        ;; TODO: remove inline styles
        [:p {:style "float: right;"}
+        ;; TODO: hide terminate if halted/failed
         [:button {:onclick "show_terminate()"} "Terminate"]
         [:div {:id "terminate" :style "float: right; clear: right; display: none"}
          [:button {:onclick "hide_terminate();"} "Cancel"]

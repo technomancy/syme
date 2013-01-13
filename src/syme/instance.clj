@@ -11,7 +11,6 @@
             [pallet.phase :as phase]
             [clj-http.client :as http]
             [environ.core :refer [env]]
-            [tentacles.repos :as repos]
             [tentacles.users :as users]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
@@ -27,7 +26,7 @@
 
 (def write-key-pair
   (delay
-   (.mkdirs (io/file "data" "keys"))
+   (.mkdirs (io/file "keys"))
    (io/copy (.getBytes (.replaceAll (env :private-key) "\\\\n" "\n"))
             (io/file privkey))
    (io/copy (.getBytes (env :public-key))
@@ -38,7 +37,7 @@
                  (:body) (.split "\n"))]
     (map (memfn getBytes) keys)))
 
-(defn bootstrap-phase [username project repo users]
+(defn bootstrap-phase [username project users]
   (let [ip (node/primary-ip (crate/target-node))]
     (db/status username project "bootstrapping" {:ip ip})
     (apply admin/automated-admin-user
@@ -67,12 +66,10 @@
 (defn launch [username {:keys [project invite identity credential]}]
   (let [group (str username "/" project)
         gh-user (future (users/user username))
-        repo (apply repos/specific-repo (.split project "/"))
         users (cons username (if (= invite "users to invite")
                                []
                                (.split invite ",? +")))]
     (sql/with-connection db/db
-      (db/create username project (:description @repo))
       (doseq [invitee users]
         (db/invite username project invitee)))
     (println "Converging" group "...")
@@ -83,7 +80,7 @@
                                :image {:os-family :ubuntu
                                        :image-id "us-east-1/ami-3c994355"})
                    :phases {:bootstrap (partial bootstrap-phase username
-                                                project repo invite)
+                                                project users)
                             :configure (partial configure-phase username
                                                 project gh-user)})
                   :user admin-user

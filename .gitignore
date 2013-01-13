@@ -8,7 +8,7 @@ pom.xml
 /.env
 /target
 /profiles.clj
-/data
+/keys
 /logs
 /.lein-repl-history
 /pg

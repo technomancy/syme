@@ -2,14 +2,17 @@
   (:refer-clojure :exclude [find])
   (:require [clojure.java.jdbc :as sql]
             [clojure.java.io :as io]
+            [tentacles.repos :as repos]
             [environ.core :as env]))
 
 (def db (env/env :database-url "postgres://localhost:5432/syme"))
 
-(defn create [owner project description ip]
-  (sql/insert-record :instances {:project project :owner owner
-                                 :status "created"
-                                 :description description :ip ip}))
+(defn create [owner project]
+  (let [{:keys [description]} (apply repos/specific-repo (.split project "/"))]
+    (sql/with-connection db
+      (sql/insert-record :instances {:project project :owner owner
+                                     :status "starting"
+                                     :description description}))))
 
 (defn status [owner project status & [args]]
   (sql/with-connection db
@@ -28,8 +31,10 @@
   (sql/with-connection db
     (sql/with-query-results [instance]
       [(str "SELECT * FROM instances WHERE owner = ? AND project = ?"
-              (if-not include-halted?
-                " AND status <> 'halted'"))
+            (if-not include-halted? (str " AND status <> 'halted'"
+                                         " AND status <> 'halting'"
+                                         " AND status <> 'failed'"))
+            " ORDER BY at DESC")
        username project-name]
       ;; whatever I suck at sql
       (if instance

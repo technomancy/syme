@@ -58,13 +58,14 @@
                                      "client_id=" (env :oauth-client-id)))
              :session (merge session {:project project})))))
   (POST "/launch" {{:keys [username] :as session} :session
-                   params :params}
+                   {:keys [project] :as params} :params}
         (when-not username
           (throw (ex-info "Must be logged in." {:status 401})))
-        (when (db/find username (:project params))
+        (when (db/find username project)
           (throw (ex-info "Already launched" {:status 409})))
+        (db/create username project)
         (future (instance/launch username params))
-        (assoc (res/redirect (str "/project/" (:project params)))
+        (assoc (res/redirect (str "/project/" project))
           :session (merge session (select-keys params
                                                [:identity :credential]))))
   (GET "/project/:gh-user/:project" {{:keys [username]} :session
@@ -119,14 +120,14 @@
 
 (defn wrap-find-instance [handler]
   (fn [req]
-    (handler (if-let [project (rest (re-find #"/project/(\w+/\w+)" (:uri req)))]
-               (if-let [instance (db/find (:username (:session req)) project true)]
-                 (assoc req :instance instance)
+    (handler (if-let [project (second (re-find #"/project/(\w+/\w+)" (:uri req)))]
+               (if-let [inst (db/find (:username (:session req)) project true)]
+                 (assoc req :instance inst)
                  (throw (ex-info "Instance not found" {:status 404})))
                req))))
 
 (defn log [req]
-  #_(println (:request-method req) (:uri req) :session (keys (:session req))))
+  (println (:request-method req) (:uri req) :session (keys (:session req))))
 
 (defn wrap-logging [handler]
   #(handler (doto % log)))
