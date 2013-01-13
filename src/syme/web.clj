@@ -117,20 +117,16 @@
       (handler req)
       (throw (ex-info "Must be logged in." {:status 401})))))
 
-(defn log-resp [resp]
-  (prn :resp (keys resp) :status (:status resp)))
-
 (defn wrap-find-instance [handler]
   (fn [req]
-    (let [[_ project] (re-find #"/project/(\w+/\w+)" (:uri req))]
-      (handler (if (.startsWith (:uri req) "/project")
-                 (if-let [instance (db/find (:username (:session req)) project)]
-                   (assoc req :instance instance)
-                   (throw (ex-info "Instance not found" {:status 404})))
-                 req)))))
+    (handler (if-let [project (rest (re-find #"/project/(\w+/\w+)" (:uri req)))]
+               (if-let [instance (db/find (:username (:session req)) project true)]
+                 (assoc req :instance instance)
+                 (throw (ex-info "Instance not found" {:status 404})))
+               req))))
 
 (defn log [req]
-  (println (:request-method req) (:uri req) :session (keys (:session req))))
+  #_(println (:request-method req) (:uri req) :session (keys (:session req))))
 
 (defn wrap-logging [handler]
   #(handler (doto % log)))

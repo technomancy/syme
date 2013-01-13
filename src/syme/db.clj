@@ -24,16 +24,19 @@
     (sql/insert-record :invites {:instance_id (:id instance)
                                  :invitee invitee})))
 
-(defn find [username project-name]
+(defn find [username project-name & [include-halted?]]
   (sql/with-connection db
     (sql/with-query-results [instance]
-      ["SELECT * FROM instances WHERE owner = ? AND project = ?"
+      [(str "SELECT * FROM instances WHERE owner = ? AND project = ?"
+              (if-not include-halted?
+                " AND status <> 'halted'"))
        username project-name]
       ;; whatever I suck at sql
-      (sql/with-query-results invitees
-        ["SELECT * FROM invites WHERE instance_id = ?" (:id instance)]
-        (assoc instance
-          :invitees (mapv :invitee invitees))))))
+      (if instance
+        (sql/with-query-results invitees
+          ["SELECT * FROM invites WHERE instance_id = ?" (:id instance)]
+          (assoc instance
+            :invitees (mapv :invitee invitees)))))))
 
 ;; migrations
 
