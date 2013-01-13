@@ -72,6 +72,18 @@
           :headers {"Content-Type" "application/json"}
           :body (json/encode instance)}
          (throw (ex-info "Repository not found" {:status 404}))))
+  (DELETE "/project/:gh-user/:project" {{:keys [gh-user project]} :params
+                                        {:keys [username identity credential]}
+                                        :session}
+          (prn :session identity)
+          (if-let [instance (db/find username (str gh-user "/" project))]
+            (do (instance/halt username {:project (str gh-user "/" project)
+                                         :identity identity
+                                         :credential credential})
+                {:status 200
+                 :headers {"Content-Type" "application/json"}
+                 :body (json/encode instance)})
+            (throw (ex-info "Repository not found" {:status 404}))))
   (GET "/oauth" {{:keys [code]} :params session :session}
        (if code
          (let [token (get-token code)

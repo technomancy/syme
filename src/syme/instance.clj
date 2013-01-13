@@ -101,7 +101,7 @@
         ;; <hugod> pallet.event - the log-publisher is what logs the phase fns
         (db/status username project "ready")))))
 
-(defn destroy [username {:keys [project invite identity credential]}]
+(defn halt [username {:keys [project identity credential]}]
   (let [group (str username "/" project)]
     (println "Destroying" group "...")
     @(pallet/converge
@@ -109,7 +109,8 @@
        group, :count 0)
       :compute (compute/compute-service "aws-ec2"
                                         :identity identity
-                                        :credential credential))))
+                                        :credential credential))
+    (db/status username project "halted")))
 
 (defn nodes [identity credential]
   (pallet.compute/nodes

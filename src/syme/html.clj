@@ -84,9 +84,15 @@
           [:p {:id "desc"} (:description instance)]
           [:hr]
           (if (:ip instance)
-            [:p {:id "ip" :class (:status instance)}
-             [:tt "ssh syme@" (:ip instance)]]
-            ;; TODO: JS to update status here periodically.
+            [:div
+             ;; TODO: styling here sucks
+             [:p {:style "float: right;"}
+              [:button {:onclick "show_terminate()"} "Terminate"]
+              [:div {:id "terminate" :style "float: right; clear: right; display: none"}
+               [:button {:onclick (format "terminate('%s')" project)} "Confirm"]
+               [:button {:onclick "hide_terminate();"} "Cancel"]]]
+             [:p {:id "ip" :class (:status instance)}
+              [:tt "ssh syme@" (:ip instance)]]]
             [:p "Waiting to boot... refresh in a minute or two."])
           [:hr]
           [:ul {:id "users"}
