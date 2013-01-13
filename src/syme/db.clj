@@ -8,14 +8,14 @@
 
 (defn create [owner project description ip]
   (sql/insert-record :instances {:project project :owner owner
-                                 :status "bootstrapping"
+                                 :status "created"
                                  :description description :ip ip}))
 
-(defn status [owner project status]
+(defn status [owner project status & [args]]
   (sql/with-connection db
     (sql/update-values :instances
                        ["owner = ? AND project = ?" owner project]
-                       {:status status})))
+                       (merge {:status status} args))))
 
 (defn invite [owner project invitee]
   (sql/with-query-results [instance]

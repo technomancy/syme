@@ -40,16 +40,9 @@
                  (:body) (.split "\n"))]
     (map (memfn getBytes) keys)))
 
-(defn bootstrap-phase [username project repo invite]
-  (let [ip (node/primary-ip (crate/target-node))
-        desc (:description @repo)
-        invite (if (= invite "users to invite") "" invite)
-        users (cons username (.split invite ",? +"))]
-    ;; TODO: move this logic
-    (sql/with-connection db/db
-      (db/create username project desc ip)
-      (doseq [invitee users]
-        (db/invite username project invitee)))
+(defn bootstrap-phase [username project repo users]
+  (let [ip (node/primary-ip (crate/target-node))]
+    (db/status username project "bootstrapping" {:ip ip})
     (apply admin/automated-admin-user
            "syme" (cons (.getBytes (:public-key env))
                         (mapcat get-keys users)))))
@@ -74,7 +67,14 @@
 (defn launch [username {:keys [project invite identity credential]}]
   (let [group (str username "/" project)
         gh-user (future (users/user username))
-        repo (future (apply repos/specific-repo (.split project "/")))]
+        repo (apply repos/specific-repo (.split project "/"))
+        users (cons username (if (= invite "users to invite")
+                               []
+                               (.split invite ",? +")))]
+    (sql/with-connection db/db
+      (db/create username project (:description @repo))
+      (doseq [invitee users]
+        (db/invite username project invitee)))
     (println "Converging" group "...")
     (let [result (pallet/converge
                   (pallet/group-spec
@@ -103,6 +103,7 @@
         (db/status username project "ready")))))
 
 (defn halt [username {:keys [project identity credential]}]
+  (db/status username project "halting")
   (let [group (str username "/" project)]
     (println "Destroying" group "...")
     @(pallet/converge
