@@ -17,11 +17,9 @@
             [clojure.java.jdbc :as sql]
             [syme.db :as db]))
 
-(def pubkey (str (io/file (System/getProperty "user.dir")
-                          "data" "keys" "syme.pub")))
+(def pubkey (str (io/file (System/getProperty "user.dir") "keys" "syme.pub")))
 
-(def privkey (str (io/file (System/getProperty "user.dir")
-                           "data" "keys" "syme")))
+(def privkey (str (io/file (System/getProperty "user.dir") "keys" "syme")))
 
 (def admin-user (api/make-user "syme"
                                :public-key-path pubkey
