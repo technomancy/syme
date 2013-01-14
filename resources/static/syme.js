@@ -1,11 +1,13 @@
 // instance reload
 
+var poll_interval = 4000;
+
 var reload_status = function (request, project) {
     if (request.readyState == 4) {
         if (request.status == 200) {
             location.reload(true);
         } else {
-            setTimeout(function() { wait_for_boot(project); }, 2000);
+            setTimeout(function() { wait_for_boot(project); }, poll_interval);
         }
     }
 };
@@ -23,7 +25,7 @@ var update_status = function (request, project) {
             var data = JSON.parse(request.responseText);
             document.getElementById("status").innerHTML = data.status;
             document.getElementById("status").className = data.status;
-            setTimeout(function() { watch_status(project); }, 2000);
+            setTimeout(function() { watch_status(project); }, poll_interval);
             // TODO: update ip if halted
             // TODO: disable terminate button if halted
             // TODO: update invited list?
