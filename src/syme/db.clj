@@ -26,7 +26,7 @@
 
 (defn invite [owner project invitee]
   (sql/with-query-results [instance]
-    ["SELECT * FROM instances WHERE project = ? and owner = ?"
+    ["SELECT * FROM instances WHERE project = ? and owner = ? ORDER BY at DESC"
      project owner]
     (sql/insert-record :invites {:instance_id (:id instance)
                                  :invitee invitee})))
