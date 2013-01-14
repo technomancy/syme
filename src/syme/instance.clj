@@ -26,7 +26,7 @@
 
 (def write-key-pair
   (delay
-   (.mkdirs (io/file "keys"))
+   (.mkdirs (.getParentFile (io/file pubkey)))
    (io/copy (.getBytes (.replaceAll (env :private-key) "\\\\n" "\n"))
             (io/file privkey))
    (io/copy (.getBytes (env :public-key))
@@ -63,6 +63,8 @@
   (actions/package "tmux"))
 
 (defn launch [username {:keys [project invite identity credential]}]
+  (alter-var-root #'pallet.core.user/*admin-user* (constantly admin-user))
+  (force write-key-pair)
   (let [group (str username "/" project)
         gh-user (future (users/user username))
         users (cons username (if (= invite "users to invite")
