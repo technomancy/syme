@@ -16,9 +16,13 @@
 
 (defn status [owner project status & [args]]
   (sql/with-connection db
-    (sql/update-values :instances
-                       ["owner = ? AND project = ?" owner project]
-                       (merge {:status status} args))))
+    (sql/with-query-results [last]
+      ["SELECT * FROM instances WHERE owner = ? AND project = ? ORDER BY at DESC"
+       owner project]
+      (sql/update-values :instances
+                         ["owner = ? AND project = ? AND at = ?"
+                          owner project (:at last)]
+                         (merge {:status status} args)))))
 
 (defn invite [owner project invitee]
   (sql/with-query-results [instance]
