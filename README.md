@@ -21,6 +21,8 @@ Watch out that you don't forward your SSH agent, since it will be
 available to everyone sharing your session. Future versions will
 prevent this leakage.
 
+Inspired by [pair.io](http://pair.io).
+
 ## Setting up your own
 
 * [Register as a GitHub OAuth application](https://github.com/settings/applications/new)
