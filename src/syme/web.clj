@@ -120,7 +120,8 @@
 
 (defn wrap-find-instance [handler]
   (fn [req]
-    (handler (if-let [project (second (re-find #"/project/(\w+/\w+)" (:uri req)))]
+    (handler (if-let [project (second (re-find #"/project/([^/]+/[^/]+)"
+                                               (:uri req)))]
                (if-let [inst (db/find (:username (:session req)) project true)]
                  (assoc req :instance inst)
                  (throw (ex-info "Instance not found" {:status 404})))
