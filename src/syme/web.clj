@@ -11,6 +11,7 @@
             [ring.adapter.jetty :as jetty]
             [ring.util.response :as res]
             [ring.middleware.basic-authentication :as basic]
+            [noir.util.middleware :as noir]
             [cemerick.drawbridge :as drawbridge]
             [environ.core :refer [env]]
             [clj-http.client :as http]
@@ -143,6 +144,9 @@
                          ((if (env :production)
                             wrap-error-page
                             trace/wrap-stacktrace))
+                         ((if (env :production)
+                            noir/wrap-force-ssl
+                            identity))
                          wrap-logging
                          (site {:session {:store store}}))
                      {:port port :join? false})))

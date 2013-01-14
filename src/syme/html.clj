@@ -14,7 +14,7 @@
     (include-css "/stylesheets/style.css"
                  "/stylesheets/base.css"
                  "/stylesheets/skeleton.css")
-    (include-css "http://fonts.googleapis.com/css?family=Passion+One:700")]
+    (include-css "https://fonts.googleapis.com/css?family=Passion+One:700")]
    [:body
     [:div#header
      [:h1.container "Syme"]]

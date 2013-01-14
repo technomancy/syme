@@ -13,6 +13,7 @@
                  [clj-http "0.6.3" :exclusions [commons-logging]]
                  [cheshire "5.0.1"]
                  [environ "0.2.1"]
+                 [lib-noir "0.3.4"]
                  [postgresql "9.1-901-1.jdbc4"]
                  [org.clojure/java.jdbc "0.2.1"]
                  [org.cloudhoist/pallet "0.8.0-alpha.8"]
