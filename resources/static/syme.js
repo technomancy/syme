@@ -26,9 +26,11 @@ var update_status = function (request, project) {
             document.getElementById("status").innerHTML = data.status;
             document.getElementById("status").className = data.status;
             setTimeout(function() { watch_status(project); }, poll_interval);
-            // TODO: update ip if halted
-            // TODO: disable terminate button if halted
-            // TODO: update invited list?
+            if(data.status == "halted" || data.status == "halting" ||
+               data.status == "failed") {
+                document.getElementById("termdiv").style.display = "none";
+                document.getElementById("ip").style["text-decoration"] = "line-through";
+            }
         }
     }
 };

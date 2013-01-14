@@ -83,13 +83,13 @@
     (if ip
       [:div
        ;; TODO: remove inline styles
-       [:p {:style "float: right;"}
-        ;; TODO: hide terminate if halted/failed
-        [:button {:onclick "show_terminate()"} "Terminate"]
-        [:div {:id "terminate" :style "float: right; clear: right; display: none"}
-         [:button {:onclick "hide_terminate();"} "Cancel"]
-         [:button {:onclick (format "terminate('%s')" project)} "Confirm"]]]
-       [:p {:id "ip" :class status}
+       [:p {:id "termdiv" :style "float: right; margin: -7px 0;"}
+        [:button {:onclick "show_terminate()"} "Terminate"]]
+       [:div {:id "terminate" :style "float: right; clear: right; display: none"}
+        [:button {:onclick "hide_terminate();"} "Cancel"]
+        [:button {:onclick (format "terminate('%s')" project)} "Confirm"]]
+       [:p {:id "ip" :class status
+            :title "Send this command to the users you've invited."}
         [:tt "ssh syme@" ip]]]
       [:p "Waiting to boot... could take a few minutes."])
     [:hr]

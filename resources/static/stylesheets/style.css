@@ -70,6 +70,10 @@ div p#status.halted {
     color: red;
 }
 
+div p#status.halting {
+    color: red;
+}
+
 div p#status.failed {
     color: brown;
 }
