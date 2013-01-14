@@ -2,6 +2,21 @@
 
 Instant collaboration on GitHub projects.
 
+> Almost in the act of stepping on board, Gabriel Syme turned to the gaping Gregory.
+>
+> "You have kept your word," he said gently, with his face in shadow.
+> "You are a man of honour, and I thank you. You have kept it even down
+> to a small particular. There was one special thing you promised me at
+> the beginning of the affair, and which you have certainly given me by
+> the end of it."
+> 
+> "What do you mean?" cried the chaotic Gregory. "What did I promise you?"
+> 
+> "A very entertaining evening," said Syme, and he made a military
+> salute with the sword-stick as the steamboat slid away.
+
+- The Man who was Thursday, by G.K. Chesterton
+
 ## Usage
 
 1. Enter the name of a GitHub repo.
