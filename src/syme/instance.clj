@@ -79,7 +79,7 @@
                    group, :count 1
                    :node-spec (pallet/node-spec
                                :image {:os-family :ubuntu
-                                       :image-id "us-east-1/ami-3c994355"})
+                                       :image-id "us-west-2/ami-162ea626"})
                    :phases {:bootstrap (partial bootstrap-phase username
                                                 project users)
                             :configure (partial configure-phase username
