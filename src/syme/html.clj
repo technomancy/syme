@@ -65,6 +65,9 @@
                            "if(this.value==this.defaultValue) this.value='';")
                 :onblur "if(this.value=='') this.value='AWS Secret Key';"}]
        [:hr]
+       [:p {:style "float: right; margin-top: 10px; font-size: 80%"}
+        "Your credentials are stored in an encrypted cookie, never"
+        " on the server."]
        [:input {:type :submit :value "Launch!"}]]]
      username repo-name)))
 
@@ -88,7 +91,7 @@
          [:button {:onclick (format "terminate('%s')" project)} "Confirm"]]]
        [:p {:id "ip" :class status}
         [:tt "ssh syme@" ip]]]
-      [:p "Waiting to boot... refresh in a minute or two."])
+      [:p "Waiting to boot... could take a few minutes."])
     [:hr]
     [:ul {:id "users"}
      (for [u invitees]
