@@ -54,12 +54,11 @@
      "gitconfig"
      ~(format "git config --global %s '%s'; git config --global %s '%s'"
               "user.email" (:email @gh-user) "user.name" (:name @gh-user))))
-  ;; TODO: this file is always empty
-  (actions/remote-file "/etc/motd"
+  (actions/remote-file "/etc/motd" :literal true
                        :content (slurp (io/resource "motd")))
-  (actions/remote-file "/etc/tmux.conf"
+  (actions/remote-file "/etc/tmux.conf" :literal true
                        :content (slurp (io/resource "tmux.conf")))
-  (actions/remote-file "/usr/bin/local/add-github-user" :mode "0755"
+  (actions/remote-file "/usr/local/bin/add-github-user" :mode "0755" :literal true
                        :content (slurp (io/resource "add-github-user")))
   (actions/package "tmux"))
 
@@ -112,7 +111,6 @@
     (db/status username project "halted")))
 
 (defn nodes [identity credential]
-  (pallet.compute/nodes
-   (compute/compute-service "aws-ec2"
-                            :identity identity
-                            :credential credential)))
+  (pallet.compute/nodes (compute/compute-service "aws-ec2"
+                                                 :identity identity
+                                                 :credential credential)))

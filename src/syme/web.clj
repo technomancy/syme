@@ -127,7 +127,7 @@
                req))))
 
 (defn log [req]
-  (println (:request-method req) (:uri req) :session (keys (:session req))))
+  #_(println (:request-method req) (:uri req) :session (keys (:session req))))
 
 (defn wrap-logging [handler]
   #(handler (doto % log)))
