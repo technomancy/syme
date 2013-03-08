@@ -4,7 +4,7 @@
   :license "Eclipse Public License 1.0"
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [com.amazonaws/aws-java-sdk "1.3.33"
-                  :exclusions [org.codehaus.jackson/jackson-core-asl]]
+                  :exclusions [org.apache.httpcomponents/httpclient]]
                  [compojure "1.1.1"]
                  [ring/ring-jetty-adapter "1.1.6"]
                  [ring/ring-devel "1.1.0"]

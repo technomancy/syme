@@ -14,7 +14,8 @@
             [tentacles.users :as users]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
-            [syme.db :as db]))
+            [syme.db :as db]
+            [syme.dns :as dns]))
 
 (def pubkey (str (io/file (System/getProperty "user.dir") "keys" "syme.pub")))
 
@@ -38,7 +39,9 @@
     (map (memfn getBytes) keys)))
 
 (defn bootstrap-phase [username project users]
-  (let [ip (node/primary-ip (crate/target-node))]
+  (let [ip (node/primary-ip (crate/target-node))
+        old-ip (db/most-recent-ip username)]
+    (dns/register-hostname (str username "." (:domain-name env)) old-ip ip)
     (db/status username project "bootstrapping" {:ip ip})
     (apply admin/automated-admin-user
            "syme" (cons (.getBytes (:public-key env))

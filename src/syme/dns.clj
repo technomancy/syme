@@ -10,22 +10,20 @@
                                                  ResourceRecordSet
                                                  ResourceRecord)))
 
-(defonce client (AmazonRoute53Client. (BasicAWSCredentials.
-                                       (env :aws-access-key-id)
-                                       (env :aws-secret-key))))
+(def client (delay (AmazonRoute53Client. (BasicAWSCredentials.
+                                          (env :aws-access-key-id)
+                                          (env :aws-secret-key)))))
 
 (defn make-request [change]
   (let [zone-req (GetHostedZoneRequest. (env :zone-id))
-        zone (.getHostedZone (.getHostedZone client zone-req))
+        zone (.getHostedZone (.getHostedZone @client zone-req))
         req (ChangeResourceRecordSetsRequest. (.getId zone) change)]
-    (.changeResourceRecordSets client req)))
+    (.changeResourceRecordSets @client req)))
 
 (defn make-change [change-type hostname ip]
   (Change. change-type
            (doto (ResourceRecordSet. hostname "A")
              (.setTTL 5)
-             (.setSetIdentifier "syme1")
-             (.setWeight 10)
              (.setResourceRecords [(ResourceRecord. ip)]))))
 
 (defn register-hostname [hostname old-ip new-ip]
