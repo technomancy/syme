@@ -4,6 +4,7 @@
             [tentacles.repos :as repos]
             [tentacles.users :as users]
             [syme.db :as db]
+            [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]))
 
 (defn layout [body username & [project]]
@@ -20,10 +21,11 @@
      [:h1.container "Syme"]]
     [:div#content.container body
      [:div#footer
-      [:p (if username
-            [:span [:a {:href "/logout"} "Log out"] " | "])
-        "Get " [:a {:href "https://github.com/technomancy/syme"}
-                     "the source"] "."]]]]))
+      [:p "Get " [:a {:href "https://github.com/technomancy/syme"}
+                  "the source"] "."
+       " | " [:a {:href "/faq"} "What's this about?"]
+       (if username
+         [:span " | " [:a {:href "/logout"} "Log out"]])]]]]))
 
 (defn splash [username]
   (layout
@@ -38,6 +40,9 @@
     ;; TODO: display active instances
     ] username))
 
+(defn faq [username]
+  (layout (slurp (io/resource "faq.html")) username))
+
 (defn launch [username repo-name identity credential]
   (let [repo (apply repos/specific-repo (.split repo-name "/"))]
     (when-not (:name repo)
@@ -50,6 +55,7 @@
       [:form {:action "/launch" :method :post}
        [:input {:type :hidden :name "project" :value repo-name}]
        [:input {:type :text :name "invite" :id "invite"
+                ;; TODO: clarify it's space-separated github usernames
                 :value "users to invite"
                 :onfocus "if(this.value==this.defaultValue) this.value='';"
                 :onblur "if(this.value=='') this.value='users to invite';"}]

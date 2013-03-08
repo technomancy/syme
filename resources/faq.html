@@ -1,0 +1,22 @@
+<h3>What's going on here?</h3>
+
+<p>Syme makes it easy to set up disposable sessions for collaborating
+  on GitHub projects via <tt>ssh</tt> and <tt>tmux</tt>.</p>
+
+<hr>
+
+<ol>
+  <li>Enter the name of a GitHub repo. (Authorize Syme via GitHub if you haven't already.)</li>
+  <li>Enter your AWS credentials and names of GitHub users to invite.</li>
+  <li>Wait for your instance to boot.</li>
+  <li>SSH into the instance using the command shown and launch `tmux`.</li>
+  <li>Send the login info to the users you have invited.</li>
+</ol>
+
+<hr>
+
+<p>Syme handles launching the instance, setting up public keys,
+  installing basic packages, and cloning the repository in question.</p>
+
+<p>Your AWS credentials are kept in an encrypted cookie in your browser
+  and aren't stored server-side beyond the scope of your request.</p>
