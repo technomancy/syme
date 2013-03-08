@@ -1,5 +1,5 @@
 (ns syme.web
-  (:require [compojure.core :refer [defroutes GET PUT POST DELETE ANY]]
+  (:require [compojure.core :refer [routes GET PUT POST DELETE ANY]]
             [compojure.handler :refer [site]]
             [compojure.route :as route]
             [clojure.java.io :as io]
@@ -8,25 +8,16 @@
             [ring.middleware.session :as session]
             [ring.middleware.resource :as resource]
             [ring.middleware.session.cookie :as cookie]
+            [ring.middleware.file-info :as file-info]
             [ring.adapter.jetty :as jetty]
             [ring.util.response :as res]
-            [ring.middleware.basic-authentication :as basic]
             [noir.util.middleware :as noir]
-            [cemerick.drawbridge :as drawbridge]
             [environ.core :refer [env]]
             [clj-http.client :as http]
             [cheshire.core :as json]
             [syme.html :as html]
             [syme.db :as db]
             [syme.instance :as instance]))
-
-(defn- authenticated? [user pass]
-  (= [user pass] [(env :repl-user false) (env :repl-password false)]))
-
-(def ^:private drawbridge
-  (-> (drawbridge/ring-handler)
-      (session/wrap-session)
-      (basic/wrap-basic-authentication authenticated?)))
 
 (defn get-token [code]
   (-> (http/post "https://github.com/login/oauth/access_token"
@@ -41,66 +32,69 @@
                 {:headers {"accept" "application/json"}})
       (:body) (json/decode true) :login))
 
-(defroutes app
-  (GET "/" {{:keys [username]} :session}
-       {:headers {"Content-Type" "text/html"}
-        :status 200
-        :body (html/splash username)})
-  (GET "/launch" {{:keys [username] :as session} :session
-                  {:keys [project]} :params}
-       (if-let [instance (db/find username project)]
-         (res/redirect (str "/project/" project))
-         (if username
-           {:headers {"Content-Type" "text/html"}
-            :status 200
-            :body (html/launch username (or project (:project session))
-                               (:identity session) (:credential session))}
-           (assoc (res/redirect (str "https://github.com/login/oauth/authorize?"
-                                     "client_id=" (env :oauth-client-id)))
-             :session (merge session {:project project})))))
-  (POST "/launch" {{:keys [username] :as session} :session
-                   {:keys [project] :as params} :params}
-        (when-not username
-          (throw (ex-info "Must be logged in." {:status 401})))
-        (when (db/find username project)
-          (throw (ex-info "Already launched" {:status 409})))
-        (db/create username project)
-        (future (instance/launch username params))
-        (assoc (res/redirect (str "/project/" project))
-          :session (merge session (select-keys params
-                                               [:identity :credential]))))
-  (GET "/project/:gh-user/:project" {{:keys [username]} :session
-                                     instance :instance}
-       (html/instance username instance))
-  ;; for polling from JS on instance page
-  (GET "/project/:gh-user/:project/status" {instance :instance}
-       {:status (if (:ip instance) 200 202)
-        :headers {"Content-Type" "application/json"}
-        :body (json/encode instance)})
-  (DELETE "/project/:gh-user/:project" {{:keys [gh-user project]} :params
-                                        {:keys [username identity credential]
-                                         :as session} :session
-                                         instance :instance}
-          (do (instance/halt username {:project (str gh-user "/" project)
-                                       :identity identity
-                                       :credential credential})
-              {:status 200
-               :headers {"Content-Type" "application/json"}
-               :body (json/encode instance)
-               :session (dissoc session :project)}))
-  (GET "/oauth" {{:keys [code]} :params session :session}
-       (if code
-         (let [token (get-token code)
-               username (get-username token)]
-           (assoc (res/redirect "/launch")
-             :session (merge session {:token token :username username})))
-         {:status 403}))
-  (GET "/logout" []
-       (assoc (res/redirect "/") :session nil))
-  (ANY "/repl" {:as req}
-       (drawbridge req))
-  (ANY "*" []
-       (route/not-found (slurp (io/resource "404.html")))))
+(def app
+  (routes
+   (GET "/" {{:keys [username]} :session}
+        {:headers {"Content-Type" "text/html"}
+         :status 200
+         :body (html/splash username)})
+   (GET "/launch" {{:keys [username] :as session} :session
+                   {:keys [project]} :params}
+        (if-let [instance (db/find username project)]
+          (res/redirect (str "/project/" project))
+          (if username
+            {:headers {"Content-Type" "text/html"}
+             :status 200
+             :body (html/launch username (or project (:project session))
+                                (:identity session) (:credential session))}
+            (assoc (res/redirect (str "https://github.com/login/oauth/authorize?"
+                                      "client_id=" (env :oauth-client-id)))
+              :session (merge session {:project project})))))
+   (POST "/launch" {{:keys [username] :as session} :session
+                    {:keys [project] :as params} :params}
+         (when-not username
+           (throw (ex-info "Must be logged in." {:status 401})))
+         (when (db/find username project)
+           (throw (ex-info "Already launched" {:status 409})))
+         (db/create username project)
+         (future (instance/launch username params))
+         (assoc (res/redirect (str "/project/" project))
+           :session (merge session (select-keys params
+                                                [:identity :credential]))))
+   (GET "/project/:gh-user/:project" {{:keys [username]} :session
+                                      instance :instance}
+        (html/instance username instance))
+   ;; for polling from JS on instance page
+   (GET "/project/:gh-user/:project/status" {instance :instance}
+        {:status (if (:ip instance) 200 202)
+         :headers {"Content-Type" "application/json"}
+         :body (json/encode instance)})
+   (DELETE "/project/:gh-user/:project" {{:keys [gh-user project]} :params
+                                         {:keys [username identity credential]
+                                          :as session} :session
+                                          instance :instance}
+           (do (instance/halt username {:project (str gh-user "/" project)
+                                        :identity identity
+                                        :credential credential})
+               {:status 200
+                :headers {"Content-Type" "application/json"}
+                :body (json/encode instance)
+                :session (dissoc session :project)}))
+   (GET "/oauth" {{:keys [code]} :params session :session}
+        (if code
+          (let [token (get-token code)
+                username (get-username token)]
+            (assoc (res/redirect "/launch")
+              :session (merge session {:token token :username username})))
+          {:status 403}))
+   (GET "/logout" []
+        (assoc (res/redirect "/") :session nil))
+   (GET "/faq" {{:keys [username]} :session}
+        {:headers {"Content-Type" "text/html"}
+         :status 200
+         :body (html/faq username)})
+   (ANY "*" []
+        (route/not-found (slurp (io/resource "404.html"))))))
 
 (defn wrap-error-page [handler]
   (fn [req]
@@ -113,8 +107,7 @@
 
 (defn wrap-login [handler]
   (fn [req]
-    ;; must be authorized or authorizing (or drawbridge)
-    (if (or (#{"/" "/launch" "/oauth" "/repl"} (:uri req))
+    (if (or (#{"/" "/launch" "/oauth" "/faq"} (:uri req))
             (:username (:session req)))
       (handler req)
       (throw (ex-info "Must be logged in." {:status 401})))))
@@ -141,6 +134,7 @@
                          (wrap-find-instance)
                          (wrap-login)
                          (resource/wrap-resource "static")
+                         (file-info/wrap-file-info)
                          ((if (env :production)
                             wrap-error-page
                             trace/wrap-stacktrace))
