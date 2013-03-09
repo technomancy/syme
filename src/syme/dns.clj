@@ -11,13 +11,14 @@
                                                  ResourceRecord)))
 
 (def client (delay (AmazonRoute53Client. (BasicAWSCredentials.
-                                          (env :aws-access-key-id)
+                                          (env :aws-access-key)
                                           (env :aws-secret-key)))))
 
-(defn make-request [change]
+(defn make-request [changes]
   (let [zone-req (GetHostedZoneRequest. (env :zone-id))
         zone (.getHostedZone (.getHostedZone @client zone-req))
-        req (ChangeResourceRecordSetsRequest. (.getId zone) change)]
+        changes (ChangeBatch. changes)
+        req (ChangeResourceRecordSetsRequest. (.getId zone) changes)]
     (.changeResourceRecordSets @client req)))
 
 (defn make-change [change-type hostname ip]
@@ -26,7 +27,5 @@
              (.setTTL 5)
              (.setResourceRecords [(ResourceRecord. ip)]))))
 
-(defn register-hostname [hostname old-ip new-ip]
-  (let [delete (make-change "DELETE" hostname old-ip)
-        create (make-change "CREATE" hostname new-ip)]
-    (make-request (ChangeBatch. (if old-ip [delete create] [create])))))
+(defn register-hostname [hostname new-ip]
+  (make-request [(make-change "CREATE" hostname new-ip)]))

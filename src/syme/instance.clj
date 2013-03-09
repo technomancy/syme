@@ -48,11 +48,14 @@
         (get-org-keys username)
         (map (memfn getBytes) keys)))))
 
+(defn subdomain-for [{:keys [owner id]}]
+  (format (:subdomain env) owner id))
+
 (defn bootstrap-phase [username project users]
   (let [ip (node/primary-ip (crate/target-node))
-        old-ip (db/most-recent-ip username)]
-    (dns/register-hostname (str username "." (:domain-name env)) old-ip ip)
+        subdomain (subdomain-for (db/find username project))]
     (db/status username project "bootstrapping" {:ip ip})
+    (dns/register-hostname subdomain ip)
     (apply admin/automated-admin-user
            "syme" (cons (.getBytes (:public-key env))
                         (mapcat get-keys users)))))
@@ -74,6 +77,15 @@
   (actions/remote-file "/usr/local/bin/add-github-user" :mode "0755" :literal true
                        :content (slurp (io/resource "add-github-user")))
   (actions/package "tmux"))
+
+(defn handle-failure [username project result]
+  (if-let [e (:exception @result)]
+    (clojure.stacktrace/print-cause-trace e)
+    (println "Convergence failure:" @result))
+  (when-let [{:keys [ip] :as record} (db/find username project)]
+    (dns/make-request [(dns/make-change "DELETE" (subdomain-for record) ip)]))
+  (println "converge failed")
+  (db/status username project "failed"))
 
 (defn launch [username {:keys [project invite identity credential]}]
   (alter-var-root #'pallet.core.user/*admin-user* (constantly admin-user))
@@ -103,12 +115,7 @@
                                                     :credential credential))]
       @result
       (if (pallet.algo.fsmop/failed? result)
-        (do
-          (if-let [e (:exception @result)]
-            (clojure.stacktrace/print-cause-trace e)
-            (println @result))
-          (println "converge failed")
-          (db/status username project "failed"))
+        (handle-failure username project result)
         ;; if we want more granular status:
         ;; <hugod> pallet.event - the log-publisher is what logs the phase fns
         (db/status username project "ready")))))

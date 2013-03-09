@@ -47,12 +47,6 @@
           (assoc instance
             :invitees (mapv :invitee invitees)))))))
 
-(defn most-recent-ip [username]
-  (sql/with-connection db
-    (sql/with-query-results [instance]
-      ["SELECT ip FROM instances WHERE owner = ? SORT BY at DESC" username]
-      (:ip instance))))
-
 ;; migrations
 
 (defn initial-schema []
