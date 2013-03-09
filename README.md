@@ -43,14 +43,6 @@ Inspired by [pair.io](http://pair.io).
 
 * Export `$OAUTH_CLIENT_ID` and `$OAUTH_CLIENT_SECRET`
 
-* Sign up for Amazon Route53 and export `$AWS_ACCESS_KEY` and `$AWS_SECRET_KEY`.
-
-* Register a domain and export it as `$SUBDOMAIN` formatted like
-  "%s.%s.syme.in". The `%s` places will be filled with the instance
-  owner and instance id.
-
-* Host the DNS under Route53 and export the `$ZONE_ID`.
-
 * Generate an SSH keypair with no passphrase: `ssh-keygen -P "" -f sss`
 
 * Export the pubkey as `$PUBLIC_KEY` and the private key as
@@ -61,6 +53,16 @@ Inspired by [pair.io](http://pair.io).
 * Create the DB schema with `lein run -m syme.db`.
 
 * Generate 16 random characters and export it as `$SESSION_SECRET`.
+
+Optional:
+
+* Sign up for Amazon Route53 and export `$AWS_ACCESS_KEY` and `$AWS_SECRET_KEY`.
+
+* Register a domain and export it as `$SUBDOMAIN` formatted like
+  "%s.%s.syme.in". The `%s` places will be filled with the instance
+  owner and instance id.
+
+* Host the DNS under Route53 and export the `$ZONE_ID`.
 
 ## License
 

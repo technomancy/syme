@@ -55,7 +55,8 @@
   (let [ip (node/primary-ip (crate/target-node))
         subdomain (subdomain-for (db/find username project))]
     (db/status username project "bootstrapping" {:ip ip})
-    (dns/register-hostname subdomain ip)
+    (when (:subdomain env)
+      (dns/register-hostname subdomain ip))
     (apply admin/automated-admin-user
            "syme" (cons (.getBytes (:public-key env))
                         (mapcat get-keys users)))))
@@ -83,7 +84,8 @@
     (clojure.stacktrace/print-cause-trace e)
     (println "Convergence failure:" @result))
   (when-let [{:keys [ip] :as record} (db/find username project)]
-    (dns/make-request [(dns/make-change "DELETE" (subdomain-for record) ip)]))
+    (when (:subdomain env)
+      (dns/make-request [(dns/make-change "DELETE" (subdomain-for record) ip)])))
   (println "converge failed")
   (db/status username project "failed"))
 
