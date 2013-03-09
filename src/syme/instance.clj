@@ -12,6 +12,7 @@
             [clj-http.client :as http]
             [environ.core :refer [env]]
             [tentacles.users :as users]
+            [tentacles.orgs :as orgs]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
             [syme.db :as db]
@@ -33,10 +34,19 @@
    (io/copy (.getBytes (env :public-key))
             (io/file pubkey))))
 
-(defn get-keys [username]
-  (let [keys (-> (http/get (format "https://github.com/%s.keys" username))
-                 (:body) (.split "\n"))]
-    (map (memfn getBytes) keys)))
+(declare get-keys)
+
+(defn get-org-keys [org-name]
+  (apply concat (for [member (orgs/members org-name)]
+                  (get-keys (:login member) true))))
+
+(defn get-keys [username & [in-org]]
+  (try
+    (let [keys (-> (http/get (format "https://github.com/%s.keys" username))
+                   (:body) (.split "\n"))]
+      (if (and (not in-org) (every? empty? keys))
+        (get-org-keys username)
+        (map (memfn getBytes) keys)))))
 
 (defn bootstrap-phase [username project users]
   (let [ip (node/primary-ip (crate/target-node))
