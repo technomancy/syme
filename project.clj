@@ -4,7 +4,8 @@
   :license "Eclipse Public License 1.0"
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [com.amazonaws/aws-java-sdk "1.3.33"
-                  :exclusions [org.apache.httpcomponents/httpclient]]
+                  :exclusions [org.apache.httpcomponents/httpclient
+                               commons-codec]]
                  [compojure "1.1.1"]
                  [ring/ring-jetty-adapter "1.1.6"]
                  [hiccup "1.0.2"]
@@ -15,15 +16,15 @@
                  [lib-noir "0.3.4"]
                  [postgresql "9.1-901-1.jdbc4"]
                  [org.clojure/java.jdbc "0.2.1"]
-                 [org.cloudhoist/pallet "0.8.0-alpha.8"]
-                 [org.cloudhoist/pallet-jclouds "1.5.1"]
-                 [org.jclouds/jclouds-allcompute "1.5.2"]
-                 [org.jclouds.driver/jclouds-slf4j "1.5.2"
+                 [com.palletops/pallet "0.8.0-beta.4"]
+                 [org.cloudhoist/pallet-jclouds "1.5.2"]
+                 [org.jclouds/jclouds-allcompute "1.5.5"]
+                 [org.jclouds.driver/jclouds-slf4j "1.5.5"
                   ;; the declared version is old and can overrule the
                   ;; resolved version
                   :exclusions [org.slf4j/slf4j-api]]
+                 [org.jclouds.driver/jclouds-sshj "1.5.5"]
                  [ch.qos.logback/logback-classic "1.0.0"]
-                 [org.jclouds.driver/jclouds-sshj "1.5.2"]
                  [org.slf4j/jcl-over-slf4j "1.6.6"]]
   :repositories {"sonatype"
                  "http://oss.sonatype.org/content/repositories/releases"}
