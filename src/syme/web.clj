@@ -47,8 +47,7 @@
              :status 200
              :body (html/launch username (or project (:project session))
                                 (:identity session) (:credential session))}
-            (assoc (res/redirect (str "https://github.com/login/oauth/authorize?"
-                                      "client_id=" (env :oauth-client-id)))
+            (assoc (res/redirect html/login-url)
               :session (merge session {:project project})))))
    (POST "/launch" {{:keys [username] :as session} :session
                     {:keys [project] :as params} :params}
@@ -84,7 +83,7 @@
         (if code
           (let [token (get-token code)
                 username (get-username token)]
-            (assoc (res/redirect "/launch")
+            (assoc (res/redirect (if (:project session) "/launch" "/"))
               :session (merge session {:token token :username username})))
           {:status 403}))
    (GET "/logout" []

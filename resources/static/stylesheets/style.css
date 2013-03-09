@@ -9,7 +9,7 @@
 }
 
 h3.project {
-    font-family: 'Inconsolata', 'Monaco', monospace;
+    font-family: 'Inconsolata', 'Monaco', 'Consolas', monospace;
     font-weight: bold; /* ignored, huh? */
 }
 
@@ -35,7 +35,7 @@ h3.project a {
 #ip {
     margin-left: 4em;
     font-size: 125%;
-    font-family: Inconsolata, Consolas, monospace;
+    font-family: 'Inconsolata', 'Monaco', 'Consolas', monospace;
 }
 
 p#ip.halted {
@@ -80,4 +80,8 @@ div p#status.failed {
 
 div p#status.ready {
     color: green;
+}
+
+html kbd {
+    font-family: 'Inconsolata', 'Monaco', 'Consolas', monospace;
 }

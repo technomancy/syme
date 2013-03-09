@@ -1,22 +1,43 @@
-<h3>What's going on here?</h3>
-
-<p>Syme makes it easy to set up disposable sessions for collaborating
-  on GitHub projects via <tt>ssh</tt> and <tt>tmux</tt>.</p>
+<dl>
+  <dt style="font-weight: bold">So what does Syme offer?</dt>
+  <dd>It sets up disposable EC2 nodes for collaborating on GitHub
+  projects via <kbd>ssh</kbd> and <kbd>tmux</kbd>.</dd>
+</dl>
 
 <hr>
 
 <ol>
   <li>Enter the name of a GitHub repo. (Authorize Syme via GitHub if you haven't already.)</li>
   <li>Enter your AWS credentials and names of GitHub users to invite.</li>
-  <li>Wait for your instance to boot.</li>
-  <li>SSH into the instance using the command shown and launch `tmux`.</li>
+  <li>SSH into the instance once it's booted using the command shown and launch <kbd>tmux</kbd>.</li>
   <li>Send the login info to the users you have invited.</li>
 </ol>
 
 <hr>
 
-<p>Syme handles launching the instance, setting up public keys,
-  installing basic packages, and cloning the repository in question.</p>
+<dl>
+  <dt style="font-weight: bold">How does it work?</dt>
+  <dd>SSH public keys are fetched via GitHub profiles, so all
+    collaborators must have a key pair with the public key
+    uploaded to GitHub. EC2 instances are launched and configured
+    via <a href="http://palletops.com/">Pallet</a>. The Syme codebase
+    is <a href="https://github.com/technomancy/syme/blob/master/src/syme/instance.clj">free
+    software</a>, so you are welcome to inspect its implementation
+    and contribute improvements.</dd>
 
-<p>Your AWS credentials are kept in an encrypted cookie in your browser
-  and aren't stored server-side beyond the scope of your request.</p>
+  <dt style="font-weight: bold; margin-top: 1em;">Is it safe?</dt>
+  <dd>Your AWS credentials are kept in an encrypted cookie in your
+    browser and aren't stored server-side beyond the scope of your
+    request. You should avoid forwarding your SSH agent to Syme
+    instances since it will be accessible to collaborators.</dd>
+
+  <dt style="font-weight: bold; margin-top: 1em;">All this for free?</dt>
+  <dd>Sort of. You will be billed by Amazon for EC2 time (m1.small)
+    until the instance is terminated, which you can do through Syme or
+    over SSH via <kbd>sudo halt</kbd>. But Syme itself doesn't cost
+    anything.</dd>
+</dl>
+
+<hr>
+
+<p>Syme is inspired by <a href="http://pair.io">pair.io</a>.</p>

@@ -7,6 +7,9 @@
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]))
 
+(def login-url (str "https://github.com/login/oauth/authorize?"
+                    "client_id=" (env :oauth-client-id)))
+
 (defn layout [body username & [project]]
   (html5
    [:head
@@ -18,14 +21,15 @@
     (include-css "https://fonts.googleapis.com/css?family=Passion+One:700")]
    [:body
     [:div#header
-     [:h1.container "Syme"]]
+     [:h1.container [:a {:href "/"} "Syme"]]]
     [:div#content.container body
      [:div#footer
-      [:p "Get " [:a {:href "https://github.com/technomancy/syme"}
-                  "the source"] "."
-       " | " [:a {:href "/faq"} "What's this about?"]
-       (if username
-         [:span " | " [:a {:href "/logout"} "Log out"]])]]]]))
+      [:p [:a {:href "/faq"} "What's this about?"]
+       " | " "Get " [:a {:href "https://github.com/technomancy/syme"}
+                     "the source"]
+       " | " (if username
+               [:a {:href "/logout"} "Log out"]
+               [:a {:href login-url} "Log in"])]]]]))
 
 (defn splash [username]
   (layout

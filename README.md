@@ -22,8 +22,7 @@ Instant collaboration on GitHub projects.
 1. Enter the name of a GitHub repo.
    (Authorize Syme via GitHub if you haven't already.)
 2. Enter your AWS credentials and names of GitHub users to invite.
-3. Wait for your instance to boot.
-4. SSH into the instance using the command shown and launch `tmux`.
+4. SSH into the instance once it's booted using the command shown and launch `tmux`.
 5. Send the login info to the users you have invited.
 
 Syme handles launching the instance, setting up public keys, and
@@ -43,6 +42,14 @@ Inspired by [pair.io](http://pair.io).
 * [Register as a GitHub OAuth application](https://github.com/settings/applications/new)
 
 * Export `$OAUTH_CLIENT_ID` and `$OAUTH_CLIENT_SECRET`
+
+* Sign up for Amazon Route53 and export `$AWS_ACCESS_KEY` and `$AWS_SECRET_KEY`.
+
+* Register a domain and export it as `$SUBDOMAIN` formatted like
+  "%s.%s.syme.in". The `%s` places will be filled with the instance
+  owner and instance id.
+
+* Host the DNS under Route53 and export the `$ZONE_ID`.
 
 * Generate an SSH keypair with no passphrase: `ssh-keygen -P "" -f sss`
 
