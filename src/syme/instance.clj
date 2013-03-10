@@ -13,6 +13,7 @@
             [environ.core :refer [env]]
             [tentacles.users :as users]
             [tentacles.orgs :as orgs]
+            [tentacles.repos :as repos]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
             [syme.db :as db]
@@ -61,12 +62,17 @@
            "syme" (cons (.getBytes (:public-key env))
                         (mapcat get-keys users)))))
 
-(defn configure-phase [username project gh-user]
+(defn configure-language [language]
+  (if-let [language-script (io/resource (str "languages/" language ".sh"))]
+    (actions/exec-checked-script "language"
+                                 ~(slurp language-script))))
+
+(defn configure-phase [username project gh-user gh-repo]
   (actions/package "git")
   (action/with-action-options {:sudo-user "syme"}
     (actions/exec-checked-script
      "Project clone"
-     ~(format "git clone git://github.com/%s.git" project))
+     ~(format "git clone https://github.com/%s.git" project))
     (actions/exec-checked-script
      "gitconfig"
      ~(format "git config --global %s '%s'; git config --global %s '%s'"
@@ -77,7 +83,11 @@
                        :content (slurp (io/resource "tmux.conf")))
   (actions/remote-file "/usr/local/bin/add-github-user" :mode "0755" :literal true
                        :content (slurp (io/resource "add-github-user")))
-  (actions/package "tmux"))
+  (actions/package "tmux")
+  ;; TODO: allow this to be customized on a per-user basis
+  (actions/package "emacs24-nox")
+  (actions/package "vim")
+  (configure-language (:language @gh-repo)))
 
 (defn unregister-dns [username project]
   (when-let [{:keys [ip] :as record} (db/find username project)]
@@ -96,6 +106,7 @@
   (alter-var-root #'pallet.core.user/*admin-user* (constantly admin-user))
   (force write-key-pair)
   (let [group (str username "/" project)
+        gh-repo (future (repos/specific-repo username project))
         gh-user (future (users/user username))
         users (cons username (if (= invite "users to invite")
                                []
@@ -113,7 +124,7 @@
                    :phases {:bootstrap (partial bootstrap-phase username
                                                 project users)
                             :configure (partial configure-phase username
-                                                project gh-user)})
+                                                project gh-user gh-repo)})
                   :user admin-user
                   :compute (compute/compute-service "aws-ec2"
                                                     :identity identity
