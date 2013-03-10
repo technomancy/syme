@@ -87,7 +87,10 @@
   ;; TODO: allow this to be customized on a per-user basis
   (actions/package "emacs24-nox")
   (actions/package "vim")
-  (configure-language (:language @gh-repo)))
+  (configure-language (:language @gh-repo))
+  (actions/exec-checked-script "project-dot-symerc"
+                               ~(str "cd ~/" (second (.split project "/")))
+                               "[ -r .symerc ] && ./.symerc"))
 
 (defn unregister-dns [username project]
   (when-let [{:keys [ip] :as record} (db/find username project)]
