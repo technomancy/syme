@@ -16,7 +16,8 @@
                  [lib-noir "0.3.4"]
                  [postgresql "9.1-901-1.jdbc4"]
                  [org.clojure/java.jdbc "0.2.1"]
-                 [com.palletops/pallet "0.8.0-beta.4"]
+                 [com.palletops/pallet "0.8.0-beta.4"
+                  :exclusions [org.clojure/clojure]]
                  [org.cloudhoist/pallet-jclouds "1.5.2"]
                  [org.jclouds/jclouds-allcompute "1.5.5"]
                  [org.jclouds.driver/jclouds-slf4j "1.5.5"

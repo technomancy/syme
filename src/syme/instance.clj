@@ -132,9 +132,10 @@
                             :configure (partial configure-phase username
                                                 project gh-user gh-repo)})
                   :user admin-user
-                  :compute (compute/compute-service "aws-ec2"
-                                                    :identity identity
-                                                    :credential credential))]
+                  :compute (compute/instantiate-provider
+                            "aws-ec2"
+                            :identity identity
+                            :credential credential))]
       @result
       (if (pallet.algo.fsmop/failed? result)
         (handle-failure username project result)
@@ -149,13 +150,8 @@
     @(pallet/converge
       (pallet/group-spec
        group, :count 0)
-      :compute (compute/compute-service "aws-ec2"
-                                        :identity identity
-                                        :credential credential))
+      :compute (compute/instantiate-provider "aws-ec2"
+                                             :identity identity
+                                             :credential credential))
     (unregister-dns username project)
     (db/status username project "halted")))
-
-(defn nodes [identity credential]
-  (pallet.compute/nodes (compute/compute-service "aws-ec2"
-                                                 :identity identity
-                                                 :credential credential)))
