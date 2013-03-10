@@ -79,13 +79,16 @@
                        :content (slurp (io/resource "add-github-user")))
   (actions/package "tmux"))
 
+(defn unregister-dns [username project]
+  (when-let [{:keys [ip] :as record} (db/find username project)]
+    (when (:subdomain env)
+      (dns/make-request [(dns/make-change "DELETE" (subdomain-for record) ip)]))))
+
 (defn handle-failure [username project result]
   (if-let [e (:exception @result)]
     (clojure.stacktrace/print-cause-trace e)
     (println "Convergence failure:" @result))
-  (when-let [{:keys [ip] :as record} (db/find username project)]
-    (when (:subdomain env)
-      (dns/make-request [(dns/make-change "DELETE" (subdomain-for record) ip)])))
+  (unregister-dns username project)
   (println "converge failed")
   (db/status username project "failed"))
 
@@ -132,6 +135,7 @@
       :compute (compute/compute-service "aws-ec2"
                                         :identity identity
                                         :credential credential))
+    (unregister-dns username project)
     (db/status username project "halted")))
 
 (defn nodes [identity credential]
