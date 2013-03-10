@@ -84,13 +84,16 @@
   (actions/remote-file "/usr/local/bin/add-github-user" :mode "0755" :literal true
                        :content (slurp (io/resource "add-github-user")))
   (actions/package "tmux")
-  ;; TODO: allow this to be customized on a per-user basis
-  (actions/package "emacs24-nox")
-  (actions/package "vim")
   (configure-language (:language @gh-repo))
   (actions/exec-checked-script "project-dot-symerc"
                                ~(str "cd ~/" (second (.split project "/")))
-                               "[ -r .symerc ] && ./.symerc"))
+                               "[ -r .symerc ] && ./.symerc")
+  (let [user-symerc-url (format "https://github.com/%s/.symerc" username)]
+    (if (-> user-symerc-url http/get :status (= 200))
+      (actions/exec-checked-script "user-dot-symerc"
+                                   ~(str "git clone --depth=1" user-symerc-url)
+                                   ~(str "cd ~ && .symerc/bootstrap "
+                                         project " " (:language @gh-repo))))))
 
 (defn unregister-dns [username project]
   (when-let [{:keys [ip] :as record} (db/find username project)]
