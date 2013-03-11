@@ -1,157 +1,125 @@
 (ns syme.instance
-  (:require [pallet.core :as pallet]
-            [pallet.api :as api]
-            [pallet.actions :as actions]
-            [pallet.action :as action]
-            [pallet.compute :as compute]
-            [pallet.node :as node]
-            [pallet.crate :as crate]
-            [pallet.core.session :as session]
-            [pallet.crate.automated-admin-user :as admin]
-            [pallet.phase :as phase]
-            [clj-http.client :as http]
+  (:require [clj-http.client :as http]
             [environ.core :refer [env]]
             [tentacles.users :as users]
             [tentacles.orgs :as orgs]
             [tentacles.repos :as repos]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
+            [clojure.string :as string]
             [syme.db :as db]
-            [syme.dns :as dns]))
+            [syme.dns :as dns])
+  (:import (com.amazonaws.auth BasicAWSCredentials)
+           (com.amazonaws.services.ec2 AmazonEC2Client)
+           (com.amazonaws.services.ec2.model CreateSecurityGroupRequest
+                                             AuthorizeSecurityGroupIngressRequest
+                                             IpPermission
+                                             ImportKeyPairRequest
+                                             RunInstancesRequest
+                                             DescribeInstancesRequest)
+           (org.apache.commons.codec.binary Base64)))
 
-(def pubkey (str (io/file (System/getProperty "user.dir") "keys" "syme.pub")))
+(def syme-pubkey
+  (str (io/file (System/getProperty "user.dir") "keys" "syme.pub")))
 
-(def privkey (str (io/file (System/getProperty "user.dir") "keys" "syme")))
-
-(def admin-user (api/make-user "syme"
-                               :public-key-path pubkey
-                               :private-key-path privkey))
+(def syme-privkey
+  (str (io/file (System/getProperty "user.dir") "keys" "syme")))
 
 (def write-key-pair
   (delay
-   (.mkdirs (.getParentFile (io/file pubkey)))
+   (.mkdirs (.getParentFile (io/file syme-pubkey)))
    (io/copy (.getBytes (.replaceAll (env :private-key) "\\\\n" "\n"))
-            (io/file privkey))
+            (io/file syme-privkey))
    (io/copy (.getBytes (env :public-key))
-            (io/file pubkey))))
-
-(declare get-keys)
-
-(defn get-org-keys [org-name]
-  (apply concat (for [member (orgs/members org-name)]
-                  (get-keys (:login member) true))))
-
-(defn get-keys [username & [in-org]]
-  (try
-    (let [keys (-> (http/get (format "https://github.com/%s.keys" username))
-                   (:body) (.split "\n"))]
-      (if (and (not in-org) (every? empty? keys))
-        (get-org-keys username)
-        (map (memfn getBytes) keys)))))
+            (io/file syme-pubkey))))
 
 (defn subdomain-for [{:keys [owner id]}]
   (format (:subdomain env) owner id))
-
-(defn bootstrap-phase [username project users]
-  (let [ip (node/primary-ip (crate/target-node))
-        subdomain (subdomain-for (db/find username project))]
-    (db/status username project "bootstrapping" {:ip ip})
-    (when (:subdomain env)
-      (dns/register-hostname subdomain ip))
-    (apply admin/automated-admin-user
-           "syme" (cons (.getBytes (:public-key env))
-                        (mapcat get-keys users)))))
-
-(defn configure-language [language]
-  (if-let [language-script (io/resource (str "languages/" language ".sh"))]
-    (actions/exec-checked-script "language"
-                                 ~(slurp language-script))))
-
-(defn configure-phase [username project gh-user gh-repo]
-  (actions/package "git")
-  (action/with-action-options {:sudo-user "syme"}
-    (actions/exec-checked-script
-     "Project clone"
-     ~(format "git clone https://github.com/%s.git" project))
-    (actions/exec-checked-script
-     "gitconfig"
-     ~(format "git config --global %s '%s'; git config --global %s '%s'"
-              "user.email" (:email @gh-user) "user.name" (:name @gh-user))))
-  (actions/remote-file "/etc/motd" :literal true
-                       :content (slurp (io/resource "motd")))
-  (actions/remote-file "/etc/tmux.conf" :literal true
-                       :content (slurp (io/resource "tmux.conf")))
-  (actions/remote-file "/usr/local/bin/add-github-user" :mode "0755" :literal true
-                       :content (slurp (io/resource "add-github-user")))
-  (actions/package "tmux")
-  (configure-language (:language @gh-repo))
-  (actions/exec-checked-script "project-dot-symerc"
-                               ~(str "cd ~/" (second (.split project "/")))
-                               "[ -r .symerc ] && ./.symerc")
-  (let [user-symerc-url (format "https://github.com/%s/.symerc" username)]
-    (if (-> user-symerc-url http/get :status (= 200))
-      (actions/exec-checked-script "user-dot-symerc"
-                                   ~(str "git clone --depth=1" user-symerc-url)
-                                   ~(str "cd ~ && .symerc/bootstrap "
-                                         project " " (:language @gh-repo))))))
 
 (defn unregister-dns [username project]
   (when-let [{:keys [ip] :as record} (db/find username project)]
     (when (:subdomain env)
       (dns/make-request [(dns/make-change "DELETE" (subdomain-for record) ip)]))))
 
-(defn handle-failure [username project result]
-  (if-let [e (:exception @result)]
-    (clojure.stacktrace/print-cause-trace e)
-    (println "Convergence failure:" @result))
-  (unregister-dns username project)
-  (println "converge failed")
-  (db/status username project "failed"))
+(defn create-security-group [client security-group-name]
+  (let [group-request (-> (CreateSecurityGroupRequest.)
+                          (.withGroupName security-group-name)
+                          (.withDescription "For Syme instances."))
+        ip-permission (-> (IpPermission.)
+                          (.withIpProtocol "tcp")
+                          (.withIpRanges (into-array ["0.0.0.0/0"]))
+                          ;; no longs? you can't be serious.
+                          (.withToPort (Integer. 22))
+                          (.withFromPort (Integer. 22)))
+        auth-request (-> (AuthorizeSecurityGroupIngressRequest.)
+                         (.withGroupName security-group-name)
+                         (.withIpPermissions [ip-permission]))]
+    (try (.createSecurityGroup client group-request)
+         (.authorizeSecurityGroupIngress client auth-request)
+         (catch Exception e
+           (when-not (= "InvalidGroup.Duplicate" (.getErrorCode e))
+             (throw e))))
+    security-group-name))
+
+(defn import-key-pair [client pubkey]
+  (try (.importKeyPair client (ImportKeyPairRequest. "syme" pubkey))
+       (catch Exception e
+         (when-not (= "InvalidKeyPair.Duplicate" (.getErrorCode e))))))
+
+(defn user-data [username project invitees]
+  (let [{:keys [language]} (apply repos/specific-repo (.split project "/"))
+        {:keys [name email]} (users/user username)
+        ;; TODO: expand orgs into member usernames
+        invitees (clojure.string/join " " invitees)]
+    (format (slurp (io/resource "userdata.sh"))
+            username project invitees name email language)))
+
+(defn run-instance [client security-group user-data-script]
+  (.runInstances client (-> (RunInstancesRequest.)
+                            (.withImageId "ami-162ea626")
+                            (.withInstanceType "m1.small")
+                            (.withMinCount (Integer. 1))
+                            (.withMaxCount (Integer. 1))
+                            (.withKeyName "syme")
+                            (.withSecurityGroups [security-group])
+                            (.withUserData (String.
+                                            (Base64/encodeBase64
+                                             (.getBytes user-data-script)))))))
+
+(defn poll-for-ip [client id]
+  (let [describe-request (-> (DescribeInstancesRequest.)
+                             (.withInstanceIds [id]))]
+    (Thread/sleep 2000)
+    ;; TODO: limit number of times we poll for the IP
+    (if-let [ip (-> client
+                    (.describeInstances describe-request)
+                    .getReservations first
+                    .getInstances first
+                    .getPublicIpAddress)]
+      ip
+      (recur client id))))
 
 (defn launch [username {:keys [project invite identity credential]}]
-  (alter-var-root #'pallet.core.user/*admin-user* (constantly admin-user))
   (force write-key-pair)
-  (let [group (str username "/" project)
-        gh-repo (future (repos/specific-repo username project))
-        gh-user (future (users/user username))
-        users (cons username (if (= invite "users to invite")
-                               []
-                               (.split invite ",? +")))]
+  (db/create username project)
+  (let [client (doto (AmazonEC2Client. (BasicAWSCredentials.
+                                        identity credential))
+                 (.setEndpoint "ec2.us-west-2.amazonaws.com"))
+        invitees (cons username (if-not (= invite "users to invite")
+                                  (.split invite ",? +")))
+        security-group-name (str "syme/" username)]
     (sql/with-connection db/db
-      (doseq [invitee users]
+      (doseq [invitee invitees]
         (db/invite username project invitee)))
-    (println "Converging" group "...")
-    (let [result (pallet/converge
-                  (pallet/group-spec
-                   group, :count 1
-                   :node-spec (pallet/node-spec
-                               :image {:os-family :ubuntu
-                                       :image-id "us-west-2/ami-162ea626"})
-                   :phases {:bootstrap (partial bootstrap-phase username
-                                                project users)
-                            :configure (partial configure-phase username
-                                                project gh-user gh-repo)})
-                  :user admin-user
-                  :compute (compute/instantiate-provider
-                            "aws-ec2"
-                            :identity identity
-                            :credential credential))]
-      @result
-      (if (pallet.algo.fsmop/failed? result)
-        (handle-failure username project result)
-        ;; if we want more granular status:
-        ;; <hugod> pallet.event - the log-publisher is what logs the phase fns
-        (db/status username project "ready")))))
-
-(defn halt [username {:keys [project identity credential]}]
-  (db/status username project "halting")
-  (let [group (str username "/" project)]
-    (println "Destroying" group "...")
-    @(pallet/converge
-      (pallet/group-spec
-       group, :count 0)
-      :compute (compute/instantiate-provider "aws-ec2"
-                                             :identity identity
-                                             :credential credential))
-    (unregister-dns username project)
-    (db/status username project "halted")))
+    (db/status username project "bootstrapping")
+    (println "Setting up security group and key for" project "...")
+    (create-security-group client security-group-name)
+    (import-key-pair client (slurp syme-pubkey))
+    (println "launching" project "...")
+    (let [result (run-instance client security-group-name
+                               (user-data username project invitees))
+          id (-> result .getReservation .getInstances first .getInstanceId)]
+      (println "waiting for IP...")
+      (let [ip (poll-for-ip client id)]
+        ;; TODO: register subdomain
+        (db/status username project "running" {:ip ip})))))
