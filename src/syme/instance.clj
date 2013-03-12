@@ -99,7 +99,7 @@
     ;; TODO: what's a good limit here?
     (if (> tries 30)
       (throw (ex-info "Timed out waiting for IP" {:status "timeout"}))
-      (Thread/sleep 1000))
+      (Thread/sleep 2000))
     (if-let [ip (-> client
                     (.describeInstances describe-request)
                     .getReservations first
@@ -113,6 +113,7 @@
                               "-o" "StrictHostKeyChecking=no"
                               (str "ubuntu@" ip)
                               "ls" "/home/ubuntu/bootstrapped")]
+    (Thread/sleep 1000)
     (if (pos? exit)
       (if (> tries 30)
         (throw (ex-info "Timed out bootstrapping" {:status "unconfigured"}))
