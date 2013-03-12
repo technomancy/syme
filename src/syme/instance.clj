@@ -16,8 +16,13 @@
                                              IpPermission
                                              ImportKeyPairRequest
                                              RunInstancesRequest
-                                             DescribeInstancesRequest)
+                                             DescribeInstancesRequest
+                                             TerminateInstancesRequest)
            (org.apache.commons.codec.binary Base64)))
+
+(defn make-client [identity credential]
+  (doto (AmazonEC2Client. (BasicAWSCredentials. identity credential))
+    (.setEndpoint "ec2.us-west-2.amazonaws.com")))
 
 (def syme-pubkey
   (str (io/file (System/getProperty "user.dir") "keys" "syme.pub")))
@@ -102,24 +107,33 @@
 (defn launch [username {:keys [project invite identity credential]}]
   (force write-key-pair)
   (db/create username project)
-  (let [client (doto (AmazonEC2Client. (BasicAWSCredentials.
-                                        identity credential))
-                 (.setEndpoint "ec2.us-west-2.amazonaws.com"))
-        invitees (cons username (if-not (= invite "users to invite")
-                                  (.split invite ",? +")))
-        security-group-name (str "syme/" username)]
-    (sql/with-connection db/db
-      (doseq [invitee invitees]
-        (db/invite username project invitee)))
-    (db/status username project "bootstrapping")
-    (println "Setting up security group and key for" project "...")
-    (create-security-group client security-group-name)
-    (import-key-pair client (slurp syme-pubkey))
-    (println "launching" project "...")
-    (let [result (run-instance client security-group-name
-                               (user-data username project invitees))
-          id (-> result .getReservation .getInstances first .getInstanceId)]
-      (println "waiting for IP...")
-      (let [ip (poll-for-ip client id)]
-        ;; TODO: register subdomain
-        (db/status username project "running" {:ip ip})))))
+  (future
+    (let [client (make-client identity credential)
+          invitees (cons username (if-not (= invite "users to invite")
+                                    (.split invite ",? +")))
+          security-group-name (str "syme/" username)]
+      (sql/with-connection db/db
+        (doseq [invitee invitees]
+          (db/invite username project invitee)))
+      (db/status username project "bootstrapping")
+      (println "Setting up security group and key for" project "...")
+      (create-security-group client security-group-name)
+      (import-key-pair client (slurp syme-pubkey))
+      (println "launching" project "...")
+      (let [result (run-instance client security-group-name
+                                 (user-data username project invitees))
+            id (-> result .getReservation .getInstances first .getInstanceId)]
+        (println "waiting for IP...")
+        ;; TODO: detect failure
+        (let [ip (poll-for-ip client id)]
+          (println "got IP:" ip)
+          ;; TODO: register subdomain
+          (db/status username project "ready" {:ip ip :instance_id id})
+          ;; TODO: status = configuring here; ready when bootstrapped
+          )))))
+
+(defn halt [username {:keys [project identity credential]}]
+  (let [client (make-client identity credential)
+        {:keys [instance_id]} (db/find username project)]
+    (.terminateInstances client (TerminateInstancesRequest. [instance_id]))
+    (db/status username project "halting")))

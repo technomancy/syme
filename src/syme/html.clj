@@ -25,8 +25,8 @@
     [:div#content.container body
      [:div#footer
       [:p [:a {:href "/faq"} "What's this about?"]
-       " | " "Get " [:a {:href "https://github.com/technomancy/syme"}
-                     "the source"]
+       " | " [:a {:href "https://github.com/technomancy/syme"}
+              "Get the source"]
        " | " (if username
                [:a {:href "/logout"} "Log out"]
                [:a {:href login-url} "Log in"])]]]]))
@@ -93,11 +93,11 @@
     (if ip
       [:div
        ;; TODO: remove inline styles
-       [:p {:id "termdiv" :style "float: right; margin: -7px 0;"}
-        [:button {:onclick "show_terminate()"} "Terminate"]]
-       [:div {:id "terminate" :style "float: right; clear: right; display: none"}
-        [:button {:onclick "hide_terminate();"} "Cancel"]
-        [:button {:onclick (format "terminate('%s')" project)} "Confirm"]]
+       [:p {:id "haltbutton" :style "float: right; margin: -7px 0;"}
+        [:button {:onclick "show_halt()"} "Halt"]]
+       [:div {:id "halt" :style "float: right; clear: right; display: none"}
+        [:button {:onclick "hide_halt();"} "Cancel"]
+        [:button {:onclick (format "halt('%s')" project)} "Confirm"]]
        [:p {:id "ip" :class status
             :title "Send this command to the users you've invited."}
         [:tt "ssh syme@" ip]]]

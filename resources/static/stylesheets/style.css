@@ -17,6 +17,10 @@ h3.project a {
     text-decoration: none;
 }
 
+h3.project a:hover {
+    color: #555;
+}
+
 #header a {
     text-decoration: none;
 }
@@ -76,6 +80,10 @@ div p#status.halting {
 
 div p#status.failed {
     color: brown;
+}
+
+div p#status.configuring {
+    color: orange;
 }
 
 div p#status.ready {

@@ -28,7 +28,7 @@ var update_status = function (request, project) {
             setTimeout(function() { watch_status(project); }, poll_interval);
 
             if(data.status == "halted" || data.status == "halting") {
-                document.getElementById("termdiv").style.display = "none";
+                document.getElementById("haltbutton").style.display = "none";
             }
             if(data.status == "halted" || data.status == "halting" ||
                data.status == "failed") {
@@ -45,22 +45,22 @@ var watch_status = function (project) {
     request.send(null);
 };
 
-// termination
+// halt
 
-var show_terminate = function () {
-    document.getElementById("terminate").style.display = 'block';
+var show_halt = function () {
+    document.getElementById("halt").style.display = 'block';
 };
 
-var hide_terminate = function () {
-    document.getElementById("terminate").style.display = 'none';
+var hide_halt = function () {
+    document.getElementById("halt").style.display = 'none';
     return false;
 };
 
-var terminate = function (project) {
+var halt = function (project) {
     var request = new XMLHttpRequest();
     // TODO: indicate progress is happening
     request.onreadystatechange = function(){ };
     request.open("DELETE", "/project/" + project, true);
     request.send(null);
-    hide_terminate();
+    hide_halt();
 };

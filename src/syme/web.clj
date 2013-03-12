@@ -55,7 +55,7 @@
            (throw (ex-info "Must be logged in." {:status 401})))
          (when (db/find username project)
            (throw (ex-info "Already launched" {:status 409})))
-         (future (instance/launch username params))
+         (instance/launch username params)
          (assoc (res/redirect (str "/project/" project))
            :session (merge session (select-keys params
                                                 [:identity :credential]))))

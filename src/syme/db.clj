@@ -64,6 +64,9 @@
                     [:instance_id :integer "NOT NULL"]
                     [:at :timestamp "NOT NULL" "DEFAULT CURRENT_TIMESTAMP"]))
 
+(defn add-instance-id []
+  (sql/do-commands "ALTER TABLE instances ADD COLUMN instance_id VARCHAR"))
+
 ;; migrations mechanics
 
 (defn run-and-record [migration]
@@ -88,4 +91,5 @@
          (run-and-record m))))))
 
 (defn -main []
-  (migrate #'initial-schema))
+  (migrate #'initial-schema
+           #'add-instance-id))

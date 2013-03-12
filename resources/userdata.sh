@@ -15,7 +15,8 @@ LANGUAGE="%s"
 # user
 
 adduser syme --disabled-password --gecos "" --quiet
-usermod -G sudo syme # TODO: passwordless sudo
+usermod -G sudo syme
+echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # static files
 
@@ -111,3 +112,5 @@ fi
 # configure user
 
 chown -R syme /home/syme
+
+touch /home/ubuntu/bootstrapped
