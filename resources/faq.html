@@ -30,7 +30,14 @@
     request. Forwarded SSH agents are disabled since otherwise
     collaborators would be able to hijack them, so Git access should
     be done over HTTPS instead. This means you'll have to enter your
-    password when you push.</dd>
+    password when you push. If you don't trust Syme with your full AWS
+    credentials you can provide credentials
+    to <a href="http://aws.typepad.com/aws/2011/02/aws-identity-access-management-login-console.html">IAM
+    account</a> that only has permissions to launch instances. By
+    default only the SSH port is open, but if you want to open others
+    you can do so from
+    the <a href="https://console.aws.amazon.com/ec2/home?region=us-west-2#s=Instances">AWS
+    EC2 console</a>.</dd>
 
   <dt style="font-weight: bold; margin-top: 1em;">All this for free?</dt>
   <dd>Sort of. You will be billed by Amazon for EC2 time (m1.small)

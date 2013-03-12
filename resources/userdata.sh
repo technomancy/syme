@@ -104,6 +104,14 @@ PROJECT_SYMERC="/home/syme/${PROJECT_PARTS[1]}/.symerc"
 sudo -iu syme git clone --depth=1 git://github.com/$USERNAME/.symerc && \
     sudo -iu syme .symerc/bootstrap $PROJECT || true
 
+# Install shutdown hook
+
+cat > /etc/init/syme-shutdown <<EOF
+start on runlevel [056]
+task
+exec curl -XPOST "%s"
+EOF
+
 # Wrapping up
 
 chown -R syme /home/syme

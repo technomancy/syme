@@ -75,11 +75,13 @@
 (defn user-data [username project invitees]
   (let [{:keys [language]} (apply repos/specific-repo (.split project "/"))
         {:keys [name email]} (users/user username)
+        {:keys [shutdown_token]} (db/find username project)
         ;; TODO: expand orgs into member usernames
         invitees (clojure.string/join " " invitees)]
     (format (slurp (io/resource "userdata.sh"))
             username project invitees name email
-            (slurp (io/resource (str "languages/" language ".sh"))))))
+            (slurp (io/resource (str "languages/" language ".sh")))
+            (str (:canonical-url) "/shutdown?token=" shutdown_token))))
 
 (defn run-instance [client security-group user-data-script]
   (.runInstances client (-> (RunInstancesRequest.)

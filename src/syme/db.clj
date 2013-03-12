@@ -3,7 +3,8 @@
   (:require [clojure.java.jdbc :as sql]
             [clojure.java.io :as io]
             [tentacles.repos :as repos]
-            [environ.core :as env]))
+            [environ.core :as env])
+  (:import (java.util UUID)))
 
 (def db (env/env :database-url "postgres://localhost:5432/syme"))
 
@@ -12,6 +13,7 @@
     (sql/with-connection db
       (sql/insert-record :instances {:project project :owner owner
                                      :status "starting"
+                                     :shutdown_token (str (UUID/randomUUID))
                                      :description description}))))
 
 (defn status [owner project status & [args]]
@@ -47,6 +49,12 @@
           (assoc instance
             :invitees (mapv :invitee invitees)))))))
 
+(defn by-token [shutdown-token]
+  (sql/with-connection db
+    (sql/with-query-results [instance]
+      ["SELECT * FROM instances WHERE shutdown_token = ?" shutdown-token]
+      instance)))
+
 ;; migrations
 
 (defn initial-schema []
@@ -66,6 +74,9 @@
 
 (defn add-instance-id []
   (sql/do-commands "ALTER TABLE instances ADD COLUMN instance_id VARCHAR"))
+
+(defn add-shutdown-token []
+  (sql/do-commands "ALTER TABLE instances ADD COLUMN shutdown_token VARCHAR"))
 
 ;; migrations mechanics
 

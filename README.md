@@ -31,10 +31,6 @@ cloning the repository in question.
 Your AWS credentials are kept in an encrypted cookie in your browser
 and aren't stored server-side beyond the scope of your request.
 
-Watch out that you don't forward your SSH agent, since it will be
-available to everyone sharing your session. Future versions will
-prevent this leakage.
-
 Inspired by [pair.io](http://pair.io).
 
 ## Setting up your own
@@ -53,6 +49,8 @@ Inspired by [pair.io](http://pair.io).
 * Create the DB schema with `lein run -m syme.db`.
 
 * Generate 16 random characters and export it as `$SESSION_SECRET`.
+
+* Export `CANONICAL_URL` as the fully-qualified URL of the splash page.
 
 Optional:
 

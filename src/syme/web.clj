@@ -67,6 +67,12 @@
         {:status (if (:ip instance) 200 202)
          :headers {"Content-Type" "application/json"}
          :body (json/encode instance)})
+   (DELETE "/shutdown" {{:keys [token]} :params}
+           (when-let [{:keys [owner project]} (db/by-token token)]
+             (db/status owner project "halted")
+             {:status 200
+              :headers {"Content-Type" "text/plain"}
+              :body "OK"}))
    (DELETE "/project/:gh-user/:project" {{:keys [gh-user project]} :params
                                          {:keys [username identity credential]
                                           :as session} :session
@@ -105,7 +111,7 @@
 
 (defn wrap-login [handler]
   (fn [req]
-    (if (or (#{"/" "/launch" "/oauth" "/faq"} (:uri req))
+    (if (or (#{"/" "/launch" "/oauth" "/faq" "/shutdown"} (:uri req))
             (:username (:session req)))
       (handler req)
       (throw (ex-info "Must be logged in." {:status 401})))))
