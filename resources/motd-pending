@@ -1,0 +1,25 @@
+   _____
+  / ___/__  ______ ___  ___
+  \__ \/ / / / __ `__ \/ _ \
+ ___/ / /_/ / / / / / /  __/
+/____/\__, /_/ /_/ /_/\___/
+     /____/
+
+--------------------------------------------------------------------------------
+
+  This instance is still in the process of bootstrapping itself. You are
+  able to log in because your pubkeys are installed, but until the
+  bootstrap process is finished some things may not be fully configured.
+  If this message is gone from `/etc/motd` it means the bootstrap is done.
+
+--------------------------------------------------------------------------------
+
+Run `tmux` to start a shared session or `tmux attach` to join.
+
+The tmux escape character is control-z, so you can use `C-z d` to detach.
+
+Use the `add-github-user` script to add a public key to this session.
+
+When you are done with this node, run `sudo halt` but make sure you've
+pushed all your work as it will be gone when the node halts.
+

@@ -105,6 +105,7 @@
     [:hr]
     [:ul {:id "users"}
      (for [u invitees]
+       ;; TODO: limit size of gravatar
        [:li [:a {:href (str "https://github.com/" u)}
              [:img {:src (icon u) :alt u :title u}]]])]
     [:script {:type "text/javascript", :src "/syme.js"

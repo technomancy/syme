@@ -12,32 +12,17 @@ FULLNAME="%s"
 EMAIL="%s"
 LANGUAGE="%s"
 
+# TODO:
+# wget -qO /etc/motd https://raw.github.com/technomancy/syme/master/resources/motd-pending &
+
 # user
 
 adduser syme --disabled-password --gecos "" --quiet
 usermod -G sudo syme
 echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
+echo "AllowAgentForwarding no" >> /etc/ssh/sshd_config
 
-# static files
-
-cat > /etc/motd <<EOF
-   _____
-  / ___/__  ______ ___  ___
-  \\__ \\/ / / / __ \`__ \\/ _ \\
- ___/ / /_/ / / / / / /  __/
-/____/\\__, /_/ /_/ /_/\\___/
-     /____/
-
-Run \`tmux\` to start a shared session or \`tmux attach\` to join.
-
-The tmux escape character is control-z, so you can use \`C-z d\` to detach.
-
-Use the \`add-github-user\` script to add a public key to this session.
-
-When you are done with this node, run \`sudo halt\` but make sure you've
-pushed all your work as it will be gone when the node halts.
-
-EOF
+# the legend tee mucks and the terrible default bindings
 
 cat > /etc/tmux.conf <<EOF
 set -g default-terminal "xterm-256color"
@@ -112,5 +97,7 @@ fi
 # configure user
 
 chown -R syme /home/syme
+
+wget -qO /etc/motd https://raw.github.com/technomancy/syme/master/resources/motd &
 
 touch /home/ubuntu/bootstrapped

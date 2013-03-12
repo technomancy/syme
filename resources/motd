@@ -1,0 +1,16 @@
+   _____
+  / ___/__  ______ ___  ___
+  \__ \/ / / / __ `__ \/ _ \
+ ___/ / /_/ / / / / / /  __/
+/____/\__, /_/ /_/ /_/\___/
+     /____/
+
+Run `tmux` to start a shared session or `tmux attach` to join.
+
+The tmux escape character is control-z, so you can use `C-z d` to detach.
+
+Use the `add-github-user` script to add a public key to this session.
+
+When you are done with this node, run `sudo halt` but make sure you've
+pushed all your work as it will be gone when the node halts.
+
