@@ -18,24 +18,29 @@
 <dl>
   <dt style="font-weight: bold">How does it work?</dt>
   <dd>SSH public keys are fetched via GitHub profiles, so all
-    collaborators must have a key pair with the public key
-    uploaded to GitHub. EC2 instances are launched and configured
-    via <a href="http://palletops.com/">Pallet</a>. The Syme codebase
+    collaborators must have a key pair with the public key uploaded to
+    GitHub. The Syme codebase
     is <a href="https://github.com/technomancy/syme/blob/master/src/syme/instance.clj">free
-    software</a>, so you are welcome to inspect its implementation
-    and contribute improvements.</dd>
+    software</a>, so you are welcome to inspect its implementation and
+    contribute improvements.</dd>
 
   <dt style="font-weight: bold; margin-top: 1em;">Is it safe?</dt>
   <dd>Your AWS credentials are kept in an encrypted cookie in your
     browser and aren't stored server-side beyond the scope of your
-    request. You should avoid forwarding your SSH agent to Syme
-    instances since it will be accessible to collaborators.</dd>
+    request. Forwarded SSH agents are disabled since otherwise
+    collaborators would be able to hijack them, so Git access should
+    be done over HTTPS instead. This means you'll have to enter your
+    password when you push.</dd>
 
   <dt style="font-weight: bold; margin-top: 1em;">All this for free?</dt>
   <dd>Sort of. You will be billed by Amazon for EC2 time (m1.small)
     until the instance is halted, which you can do through Syme or
     over SSH via <kbd>sudo halt</kbd>. But Syme itself doesn't cost
-    anything.</dd>
+    anything. You may want to periodically check
+    your <a href="https://console.aws.amazon.com/ec2/home?region=us-west-2#s=Instances">AWS
+    EC2 console</a> to ensure you aren't billed for instances you
+    intended to stop that stayed running due to bugs in Syme,
+    etc.</dd>
 </dl>
 
 <hr>

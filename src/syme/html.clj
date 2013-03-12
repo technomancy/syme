@@ -39,8 +39,7 @@
               :style "float: right; margin-top: 2px;"}]
      [:input {:type :text :name "project" :value "user/project"
               :style "width: 220px; font-size: 100%; font-weight: bold;"
-              :onfocus "if(this.value==this.defaultValue) this.value='';"
-              :onblur "if(this.value=='') this.value='user/project';"}]]
+              :placeholder "user/project"}]]
     ;; TODO: display active instances
     ] username))
 
@@ -59,21 +58,12 @@
       [:form {:action "/launch" :method :post}
        [:input {:type :hidden :name "project" :value repo-name}]
        [:input {:type :text :name "invite" :id "invite"
-                ;; TODO: clarify it's space-separated github usernames
-                :value "users to invite"
-                :onfocus "if(this.value==this.defaultValue) this.value='';"
-                :onblur "if(this.value=='') this.value='users to invite';"}]
+                :placeholder "users to invite (space-separated)"}]
        [:input {:type :text :name "identity" :id "identity"
-                :value (or identity "AWS Access Key")
-                :onfocus (if-not identity
-                           "if(this.value==this.defaultValue) this.value='';")
-                :onblur "if(this.value=='') this.value='AWS Access Key';"}]
+                :value identity :placeholder "AWS Access Key"}]
        [:input {:type :text :style "width: 320px"
                 :name "credential" :id "credential"
-                :value (or credential "AWS Secret Key")
-                :onfocus (if-not credential
-                           "if(this.value==this.defaultValue) this.value='';")
-                :onblur "if(this.value=='') this.value='AWS Secret Key';"}]
+                :value credential :placeholder "AWS Secret Key"}]
        [:hr]
        [:p {:style "float: right; margin-top: 10px; font-size: 80%"}
         "Your credentials are stored in an encrypted cookie, never"
@@ -105,9 +95,8 @@
     [:hr]
     [:ul {:id "users"}
      (for [u invitees]
-       ;; TODO: limit size of gravatar
        [:li [:a {:href (str "https://github.com/" u)}
-             [:img {:src (icon u) :alt u :title u}]]])]
+             [:img {:src (icon u) :alt u :title u :height 80 :width 80}]]])]
     [:script {:type "text/javascript", :src "/syme.js"
               :onload (if ip
                         (format "watch_status('%s')" project)

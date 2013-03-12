@@ -146,7 +146,6 @@
             (db/status username project "configuring" {:ip ip :instance_id id})
             (poll-for-bootstrapped username project ip 0))))
       (catch Exception e
-        ;; TODO: any other failure types that should have custom statuses?
         (.printStackTrace e)
         (db/status username project
                    (if (and (instance? com.amazonaws.AmazonServiceException e)
@@ -158,5 +157,5 @@
   (let [client (make-client identity credential)
         {:keys [instance_id]} (db/find username project)]
     (.terminateInstances client (TerminateInstancesRequest. [instance_id]))
-    ;; TODO: poll for halted
+    ;; TODO: set up callback for halted
     (db/status username project "halting")))
