@@ -82,6 +82,18 @@ div p#status.failed {
     color: brown;
 }
 
+div p#status.unauthorized {
+    color: brown;
+}
+
+div p#status.error {
+    color: brown;
+}
+
+div p#status.timeout {
+    color: brown;
+}
+
 div p#status.configuring {
     color: orange;
 }

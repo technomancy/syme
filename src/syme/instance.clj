@@ -6,6 +6,7 @@
             [tentacles.repos :as repos]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
+            [clojure.java.shell :as sh]
             [clojure.string :as string]
             [syme.db :as db]
             [syme.dns :as dns])
@@ -91,49 +92,71 @@
                                             (Base64/encodeBase64
                                              (.getBytes user-data-script)))))))
 
-(defn poll-for-ip [client id]
+(defn poll-for-ip [client id tries]
   (let [describe-request (-> (DescribeInstancesRequest.)
                              (.withInstanceIds [id]))]
-    (Thread/sleep 2000)
-    ;; TODO: limit number of times we poll for the IP
+    ;; TODO: what's a good limit here?
+    (if (> tries 30)
+      (throw (ex-info "Timed out waiting for IP" {:status "timeout"}))
+      (Thread/sleep 1000))
     (if-let [ip (-> client
                     (.describeInstances describe-request)
                     .getReservations first
                     .getInstances first
                     .getPublicIpAddress)]
       ip
-      (recur client id))))
+      (recur client id (inc tries)))))
 
+(defn poll-for-bootstrapped [username project ip tries]
+  (let [{:keys [exit]} (sh/sh "ssh" "-i" syme-privkey
+                              "-o" "StrictHostKeyChecking=no"
+                              (str "ubuntu@" ip)
+                              "ls" "/home/ubuntu/bootstrapped")]
+    (if (pos? exit)
+      (if (> tries 30)
+        (throw (ex-info "Timed out bootstrapping" {:status "unconfigured"}))
+        (recur username project ip (inc tries)))
+      (db/status username project "ready"))))
+
+;; TODO: break this into several defns
 (defn launch [username {:keys [project invite identity credential]}]
   (force write-key-pair)
   (db/create username project)
   (future
-    (let [client (make-client identity credential)
-          invitees (cons username (if-not (= invite "users to invite")
-                                    (.split invite ",? +")))
-          security-group-name (str "syme/" username)]
-      (sql/with-connection db/db
-        (doseq [invitee invitees]
-          (db/invite username project invitee)))
-      (db/status username project "bootstrapping")
-      (println "Setting up security group and key for" project "...")
-      (create-security-group client security-group-name)
-      (import-key-pair client (slurp syme-pubkey))
-      (println "launching" project "...")
-      (let [result (run-instance client security-group-name
-                                 (user-data username project invitees))
-            id (-> result .getReservation .getInstances first .getInstanceId)]
-        (println "waiting for IP...")
-        ;; TODO: detect failure
-        (let [ip (poll-for-ip client id)]
-          (println "got IP:" ip)
-          ;; TODO: register subdomain
-          (db/status username project "ready" {:ip ip :instance_id id})
-          ;; TODO: status = configuring here; ready when bootstrapped
-          )))))
+    (try
+      (let [client (make-client identity credential)
+            invitees (cons username (if-not (= invite "users to invite")
+                                      (.split invite ",? +")))
+            security-group-name (str "syme/" username)]
+        (sql/with-connection db/db
+          (doseq [invitee invitees]
+            (db/invite username project invitee)))
+        (db/status username project "bootstrapping")
+        (println "Setting up security group and key for" project "...")
+        (create-security-group client security-group-name)
+        (import-key-pair client (slurp syme-pubkey))
+        (println "launching" project "...")
+        (let [result (run-instance client security-group-name
+                                   (user-data username project invitees))
+              id (-> result .getReservation .getInstances first .getInstanceId)]
+          (println "waiting for IP...")
+          (let [ip (poll-for-ip client id 0)]
+            (println "got IP:" ip)
+            ;; TODO: register subdomain
+            (db/status username project "configuring" {:ip ip :instance_id id})
+            (poll-for-bootstrapped username project ip 0))))
+      (catch Exception e
+        ;; TODO: any other failure types that should have custom statuses?
+        (.printStackTrace e)
+        (db/status username project
+                   (if (and (instance? com.amazonaws.AmazonServiceException e)
+                            (= "AuthFailure" (.getMessage e)))
+                     "unauthorized"
+                     (:status (ex-data e) "error")))))))
 
 (defn halt [username {:keys [project identity credential]}]
   (let [client (make-client identity credential)
         {:keys [instance_id]} (db/find username project)]
     (.terminateInstances client (TerminateInstancesRequest. [instance_id]))
+    ;; TODO: poll for halted
     (db/status username project "halting")))
