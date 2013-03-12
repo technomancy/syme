@@ -78,7 +78,8 @@
         ;; TODO: expand orgs into member usernames
         invitees (clojure.string/join " " invitees)]
     (format (slurp (io/resource "userdata.sh"))
-            username project invitees name email language)))
+            username project invitees name email
+            (slurp (io/resource (str "languages/" language ".sh"))))))
 
 (defn run-instance [client security-group user-data-script]
   (.runInstances client (-> (RunInstancesRequest.)

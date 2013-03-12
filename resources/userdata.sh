@@ -10,10 +10,8 @@ INVITEES="%s"
 
 FULLNAME="%s"
 EMAIL="%s"
-LANGUAGE="%s"
 
-# TODO:
-# wget -qO /etc/motd https://raw.github.com/technomancy/syme/master/resources/motd-pending &
+wget -qO /etc/motd https://raw.github.com/technomancy/syme/master/resources/motd-pending &
 
 # user
 
@@ -91,10 +89,22 @@ if [ "$FULLNAME" != "" ]; then
     sudo -iu syme git config --global user.name "$FULLNAME"
 fi
 
-# TODO:
-# configure language
-# configure project
-# configure user
+# Language-specific configuration (spliced in by instance.clj)
+
+%s
+
+# Project-specific configuration
+
+PROJECT_PARTS=(${PROJECT//\// })
+PROJECT_SYMERC="/home/syme/${PROJECT_PARTS[1]}/.symerc"
+[ -x $PROJECT_SYMERC ] && sudo -iu syme $PROJECT_SYMERC
+
+# User-specific configuration
+
+sudo -iu syme git clone --depth=1 git://github.com/$USERNAME/.symerc && \
+    sudo -iu syme .symerc/bootstrap $PROJECT || true
+
+# Wrapping up
 
 chown -R syme /home/syme
 
