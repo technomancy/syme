@@ -15,18 +15,20 @@
    [:head
     [:meta {:charset "utf-8"}]
     [:title (if project (str project " - Syme") "Syme")]
-    (include-css "/stylesheets/style.css"
-                 "/stylesheets/base.css"
+    (include-css "/stylesheets/style.css" "/stylesheets/base.css"
                  "/stylesheets/skeleton.css")
     (include-css "https://fonts.googleapis.com/css?family=Passion+One:700")]
    [:body
+    (if-let [account (:analytics-account env)]
+      [:script {:type "text/javascript"} (-> (io/resource "analytics.js")
+                                             (slurp) (format account))])
     [:div#header
      [:h1.container [:a {:href "/"} "Syme"]]]
     [:div#content.container body
      [:div#footer
-      [:p [:a {:href "/faq"} "What's this about?"]
+      [:p [:a {:href "/faq"} "About"]
        " | " [:a {:href "https://github.com/technomancy/syme"}
-              "Get the source"]
+              "Source"]
        " | " (if username
                [:a {:href "/logout"} "Log out"]
                [:a {:href login-url} "Log in"])]]]]))
