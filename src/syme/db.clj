@@ -1,7 +1,6 @@
 (ns syme.db
   (:refer-clojure :exclude [find])
   (:require [clojure.java.jdbc :as sql]
-            [clojure.java.io :as io]
             [tentacles.repos :as repos]
             [environ.core :as env])
   (:import (java.util UUID)))
@@ -39,9 +38,12 @@
       [(str "SELECT * FROM instances WHERE owner = ? AND project = ?"
             (if-not include-halted? (str " AND status <> 'halted'"
                                          " AND status <> 'halting'"
-                                         " AND status <> 'failed'"))
-            " ORDER BY at DESC")
-       username project-name]
+                                         " AND status <> 'failed'"
+                                         " AND status <> 'error'"
+                                         " AND status <> 'timeout'"
+                                         " AND status <> 'unconfigured'"
+                                         " AND status <> 'unauthorized'"))
+            " ORDER BY at DESC") username project-name]
       ;; whatever I suck at sql
       (if instance
         (sql/with-query-results invitees
@@ -103,4 +105,5 @@
 
 (defn -main []
   (migrate #'initial-schema
-           #'add-instance-id))
+           #'add-instance-id
+           #'add-shutdown-token))

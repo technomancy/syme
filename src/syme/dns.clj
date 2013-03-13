@@ -4,8 +4,7 @@
            (com.amazonaws.services.route53 AmazonRoute53Client)
            (com.amazonaws.services.route53.model GetHostedZoneRequest
                                                  ChangeResourceRecordSetsRequest
-                                                 ChangeBatch
-                                                 Change
+                                                 ChangeBatch Change
                                                  ListResourceRecordSetsRequest
                                                  ResourceRecordSet
                                                  ResourceRecord)))

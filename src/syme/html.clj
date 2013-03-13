@@ -36,14 +36,16 @@
 (defn splash [username]
   (layout
    [:div
-    [:form {:action "/launch" :method :get :id "splash"}
+    [:img {:src "/splash.png"
+           :style "position: absolute; z-index: -1; top: -10px; left: -30px;"}]
+    [:form {:action "/launch" :method :get :id "splash"
+            :style "position: absolute; top: 257px; left: -20px; width: 440px;"}
      [:input {:type :submit :value "Collaborate on a GitHub project"
-              :style "float: right; margin-top: 2px;"}]
-     [:input {:type :text :name "project" :value "user/project"
-              :style "width: 220px; font-size: 100%; font-weight: bold;"
+              :style "width: 48%; float: right;"}]
+     [:input {:type :text :name "project"
+              :style "width: 48%; height: 14px; font-weight: bold;"
               :placeholder "user/project"}]]
-    ;; TODO: display active instances
-    ] username))
+    [:p {:style "margin-bottom: 700px;"} "&nbsp;"]] username))
 
 (defn faq [username]
   (layout (slurp (io/resource "faq.html")) username))
