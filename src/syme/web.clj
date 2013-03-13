@@ -67,12 +67,12 @@
         {:status (if (:ip instance) 200 202)
          :headers {"Content-Type" "application/json"}
          :body (json/encode instance)})
-   (DELETE "/shutdown" {{:keys [token]} :params}
-           (when-let [{:keys [owner project]} (db/by-token token)]
-             (db/status owner project "halted")
-             {:status 200
-              :headers {"Content-Type" "text/plain"}
-              :body "OK"}))
+   (POST "/shutdown" {{:keys [token]} :params}
+         (when-let [{:keys [owner project]} (db/by-token token)]
+           (db/status owner project "halted")
+           {:status 200
+            :headers {"Content-Type" "text/plain"}
+            :body "OK"}))
    (DELETE "/project/:gh-user/:project" {{:keys [gh-user project]} :params
                                          {:keys [username identity credential]
                                           :as session} :session
@@ -125,12 +125,6 @@
                  (throw (ex-info "Instance not found" {:status 404})))
                req))))
 
-(defn log [req]
-  #_(println (:request-method req) (:uri req) :session (keys (:session req))))
-
-(defn wrap-logging [handler]
-  #(handler (doto % log)))
-
 (defn -main [& [port]]
   (let [port (Integer. (or port (env :port) 5000))
         store (cookie/cookie-store {:key (env :session-secret)})]
@@ -145,7 +139,6 @@
                          ((if (env :production)
                             noir/wrap-force-ssl
                             identity))
-                         wrap-logging
                          (site {:session {:store store}}))
                      {:port port :join? false})))
 

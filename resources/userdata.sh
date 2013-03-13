@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 # arguments
 
 USERNAME="%s"
@@ -11,6 +9,7 @@ INVITEES="%s"
 FULLNAME="%s"
 EMAIL="%s"
 
+# TODO: this doesn't get downloaded, huh?
 wget -qO /etc/motd https://raw.github.com/technomancy/syme/master/resources/motd-pending &
 
 # user
@@ -106,16 +105,15 @@ sudo -iu syme git clone --depth=1 git://github.com/$USERNAME/.symerc && \
 
 # Install shutdown hook
 
-cat > /etc/init/syme-shutdown <<EOF
-start on runlevel [056]
-task
-exec curl -XPOST "%s"
-EOF
+# TODO: this doesn't work
+echo "curl -XPOST '%s'" > /etc/init.d/syme-shutdown
+update-rc.d syme-shutdown defaults
 
 # Wrapping up
 
 chown -R syme /home/syme
 
-wget -qO /etc/motd https://raw.github.com/technomancy/syme/master/resources/motd &
+wget -qO /tmp/motd https://raw.github.com/technomancy/syme/master/resources/motd
+cp /tmp/motd /etc/motd # doesn't seem to work either
 
 touch /home/ubuntu/bootstrapped
