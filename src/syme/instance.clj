@@ -77,11 +77,12 @@
         {:keys [name email]} (users/user username)
         {:keys [shutdown_token]} (db/find username project)
         ;; TODO: expand orgs into member usernames
-        invitees (clojure.string/join " " invitees)]
+        invitees (clojure.string/join " " invitees)
+        language-script (io/resource (str "languages/" language ".sh"))]
     (format (slurp (io/resource "userdata.sh"))
             username project invitees name email
-            (slurp (io/resource (str "languages/" language ".sh")))
-            (str (:canonical-url) "/shutdown?token=" shutdown_token))))
+            (if language-script (slurp language-script) "")
+            (str (:canonical-url env) "/shutdown?token=" shutdown_token))))
 
 (defn run-instance [client security-group user-data-script]
   (.runInstances client (-> (RunInstancesRequest.)
@@ -99,7 +100,7 @@
   (let [describe-request (-> (DescribeInstancesRequest.)
                              (.withInstanceIds [id]))]
     ;; TODO: what's a good limit here?
-    (if (> tries 30)
+    (if (> tries 60)
       (throw (ex-info "Timed out waiting for IP" {:status "timeout"}))
       (Thread/sleep 2000))
     (if-let [ip (-> client
@@ -115,9 +116,9 @@
                               "-o" "StrictHostKeyChecking=no"
                               (str "ubuntu@" ip)
                               "ls" "/home/ubuntu/bootstrapped")]
-    (Thread/sleep 1000)
+    (Thread/sleep 5000)
     (if (pos? exit)
-      (if (> tries 30)
+      (if (> tries 60)
         (throw (ex-info "Timed out bootstrapping" {:status "unconfigured"}))
         (recur username project ip (inc tries)))
       (db/status username project "ready"))))
@@ -161,5 +162,4 @@
   (let [client (make-client identity credential)
         {:keys [instance_id]} (db/find username project)]
     (.terminateInstances client (TerminateInstancesRequest. [instance_id]))
-    ;; TODO: set up callback for halted
     (db/status username project "halting")))
