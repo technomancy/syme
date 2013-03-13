@@ -98,7 +98,8 @@
          :status 200
          :body (html/faq username)})
    (ANY "*" []
-        (route/not-found (slurp (io/resource "404.html"))))))
+        (route/not-found
+         (html/layout "<h3>404</h3><p>Couldn't find that; sorry.</p>" nil)))))
 
 (defn wrap-error-page [handler]
   (fn [req]
@@ -107,7 +108,8 @@
            (.printStackTrace e)
            {:status (:status (ex-data e) 500)
             :headers {"Content-Type" "text/html"}
-            :body (:body (ex-data e) (slurp (io/resource "500.html")))}))))
+            :body (html/layout (str "<h3>500</h3><p>Oops. "
+                                    "There was a problem; sorry.</p>") nil)}))))
 
 (defn wrap-login [handler]
   (fn [req]
