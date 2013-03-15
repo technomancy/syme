@@ -38,6 +38,8 @@
         {:headers {"Content-Type" "text/html"}
          :status 200
          :body (html/splash username)})
+   (GET "/status" {{:keys [username]} :session}
+        (html/status username (db/find-all username)))
    (GET "/launch" {{:keys [username] :as session} :session
                    {:keys [project]} :params}
         (if-let [instance (db/find username project)]
