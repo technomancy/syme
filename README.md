@@ -39,20 +39,19 @@ Inspired by [pair.io](http://pair.io).
 
 * Export `$OAUTH_CLIENT_ID` and `$OAUTH_CLIENT_SECRET`
 
-* Generate an SSH keypair with no passphrase: `ssh-keygen -P "" -f sss`
-
-* Export the pubkey as `$PUBLIC_KEY` and the private key as
-  `$PRIVATE_KEY` (you will have to replace newlines with "\n")
-
 * Create a PostgreSQL DB and export `$DATABASE_URL` to point to it.
 
 * Create the DB schema with `lein run -m syme.db`.
 
-* Generate 16 random characters and export it as `$SESSION_SECRET`.
-
-* Export `CANONICAL_URL` as the fully-qualified URL of the splash page.
-
 Optional:
+
+* Generate an SSH keypair with no passphrase: `ssh-keygen -P "" -f keys/syme`
+
+* Generate 16 random characters and export it as `$SESSION_SECRET`.
+  Needed if you want cookies to outlast server restarts.
+
+* Export `$CANONICAL_URL` as the fully-qualified URL of the splash page.
+  Needed if you want shutdown hooks to register instance status.
 
 * Sign up for Amazon Route53 and export `$AWS_ACCESS_KEY` and `$AWS_SECRET_KEY`.
 

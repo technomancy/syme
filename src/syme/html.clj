@@ -51,9 +51,10 @@
   (layout (slurp (io/resource "faq.html")) username))
 
 (defn launch [username repo-name identity credential]
-  (let [repo (apply repos/specific-repo (.split repo-name "/"))]
+  (let [repo (try (apply repos/specific-repo (.split repo-name "/"))
+                  (catch Exception _))]
     (when-not (:name repo)
-      (throw (ex-info "Repository not found" {:status 404})))
+      (throw (ex-info "Repository not found." {:status 404})))
     (layout
      [:div
       [:h3.project [:a {:href (:html_url repo)} repo-name]]

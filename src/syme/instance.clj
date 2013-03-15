@@ -101,7 +101,7 @@
                              (.withInstanceIds [id]))]
     ;; TODO: what's a good limit here?
     (if (> tries 60)
-      (throw (ex-info "Timed out waiting for IP" {:status "timeout"}))
+      (throw (ex-info "Timed out waiting for IP." {:status "timeout"}))
       (Thread/sleep 2000))
     (if-let [ip (-> client
                     (.describeInstances describe-request)
@@ -119,7 +119,7 @@
     (Thread/sleep 5000)
     (if (pos? exit)
       (if (> tries 60)
-        (throw (ex-info "Timed out bootstrapping" {:status "unconfigured"}))
+        (throw (ex-info "Timed out bootstrapping." {:status "unconfigured"}))
         (recur username project ip (inc tries)))
       (db/status username project "ready"))))
 
@@ -155,6 +155,7 @@
         (db/status username project
                    (if (and (instance? com.amazonaws.AmazonServiceException e)
                             (= "AuthFailure" (.getMessage e)))
+                     ;; TODO: this isn't being detected correctly
                      "unauthorized"
                      (:status (ex-data e) "error")))))))
 

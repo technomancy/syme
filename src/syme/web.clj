@@ -54,7 +54,7 @@
          (when-not username
            (throw (ex-info "Must be logged in." {:status 401})))
          (when (db/find username project)
-           (throw (ex-info "Already launched" {:status 409})))
+           (throw (ex-info "Already launched." {:status 409})))
          (instance/launch username params)
          (assoc (res/redirect (str "/project/" project))
            :session (merge session (select-keys params
@@ -106,10 +106,11 @@
     (try (handler req)
          (catch Exception e
            (.printStackTrace e)
-           {:status (:status (ex-data e) 500)
-            :headers {"Content-Type" "text/html"}
-            :body (html/layout (str "<h3>500</h3><p>Oops. "
-                                    "There was a problem; sorry.</p>") nil)}))))
+           (let [{:keys [status] :as data :or {status 500}} (ex-data e)
+                 m (or (.getMessage e) "Oops; ran into a problem; sorry.")]
+             {:status status
+              :headers {"Content-Type" "text/html"}
+              :body (html/layout (format "<h3>%s</h3><p>%s</p>" status m))})))))
 
 (defn wrap-login [handler]
   (fn [req]
@@ -124,7 +125,7 @@
                                                (:uri req)))]
                (if-let [inst (db/find (:username (:session req)) project true)]
                  (assoc req :instance inst)
-                 (throw (ex-info "Instance not found" {:status 404})))
+                 (throw (ex-info "Instance not found." {:status 404})))
                req))))
 
 (defn -main [& [port]]
