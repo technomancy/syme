@@ -10,7 +10,7 @@ FULLNAME="%s"
 EMAIL="%s"
 
 # TODO: this doesn't get downloaded, huh?
-wget -qO /etc/motd https://raw.github.com/technomancy/syme/master/resources/motd-pending &
+wget -qO /etc/motd.tail https://raw.github.com/technomancy/syme/master/resources/motd-pending &
 
 # user
 
@@ -113,7 +113,6 @@ update-rc.d syme-shutdown defaults
 
 chown -R syme /home/syme
 
-wget -qO /tmp/motd https://raw.github.com/technomancy/syme/master/resources/motd
-cp /tmp/motd /etc/motd # doesn't seem to work either
+wget -qO /etc/motd.tail https://raw.github.com/technomancy/syme/master/resources/motd
 
 touch /home/ubuntu/bootstrapped
