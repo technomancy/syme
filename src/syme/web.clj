@@ -110,7 +110,8 @@
                  m (or (.getMessage e) "Oops; ran into a problem; sorry.")]
              {:status status
               :headers {"Content-Type" "text/html"}
-              :body (html/layout (format "<h3>%s</h3><p>%s</p>" status m))})))))
+              :body (html/layout (format "<h3>%s</h3><p>%s</p>"
+                                         status m) nil)})))))
 
 (defn wrap-login [handler]
   (fn [req]

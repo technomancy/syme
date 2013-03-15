@@ -107,6 +107,7 @@ sudo -iu syme git clone --depth=1 git://github.com/$USERNAME/.symerc && \
 
 # TODO: this doesn't work
 echo "curl -XPOST '%s'" > /etc/init.d/syme-shutdown
+chmod 755 /etc/init.d/syme-shutdown
 update-rc.d syme-shutdown defaults
 
 # Wrapping up
