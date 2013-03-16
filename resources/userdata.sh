@@ -9,7 +9,6 @@ INVITEES="%s"
 FULLNAME="%s"
 EMAIL="%s"
 
-# TODO: this doesn't get downloaded, huh?
 wget -qO /etc/motd.tail https://raw.github.com/technomancy/syme/master/resources/motd-pending &
 
 # user
@@ -105,7 +104,6 @@ sudo -iu syme git clone --depth=1 git://github.com/$USERNAME/.symerc && \
 
 # Install shutdown hook
 
-# TODO: this doesn't work
 echo "curl -XPOST '%s'" > /etc/init.d/syme-shutdown
 chmod 755 /etc/init.d/syme-shutdown
 update-rc.d syme-shutdown defaults
