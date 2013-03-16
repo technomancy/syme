@@ -99,10 +99,9 @@
 (defn poll-for-ip [client id tries]
   (let [describe-request (-> (DescribeInstancesRequest.)
                              (.withInstanceIds [id]))]
-    ;; TODO: what's a good limit here?
     (if (> tries 60)
       (throw (ex-info "Timed out waiting for IP." {:status "timeout"}))
-      (Thread/sleep 2000))
+      (Thread/sleep 5000))
     (if-let [ip (-> client
                     (.describeInstances describe-request)
                     .getReservations first
