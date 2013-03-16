@@ -19,11 +19,16 @@
             [syme.db :as db]
             [syme.instance :as instance]))
 
+;; pre-registered for http://localhost:5000
+(def dev-oauth {:client_id "49f1d4f840b69779374c"
+                :client_secret "67b9a9fcaffd0c5c47b5dec85223a357ddf3fc46"})
+
 (defn get-token [code]
   (-> (http/post "https://github.com/login/oauth/access_token"
-                 {:form-params {:client_id (env :oauth-client-id)
-                                :client_secret (env :oauth-client-secret)
-                                :code code}
+                 {:form-params (merge dev-oauth
+                                      {:client_id (env :oauth-client-id)
+                                       :client_secret (env :oauth-client-secret)
+                                       :code code})
                   :headers {"Accept" "application/json"}})
       (:body) (json/decode true) :access_token))
 

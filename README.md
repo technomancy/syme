@@ -35,17 +35,22 @@ Inspired by [pair.io](http://pair.io).
 
 ## Setting up your own
 
-* [Register as a GitHub OAuth application](https://github.com/settings/applications/new)
-
-* Export `$OAUTH_CLIENT_ID` and `$OAUTH_CLIENT_SECRET`
-
 * Create a PostgreSQL DB and export `$DATABASE_URL` to point to it.
 
 * Create the DB schema with `lein run -m syme.db`.
 
-Optional:
+### Additional steps for production
 
-* Generate an SSH keypair with no passphrase: `ssh-keygen -P "" -f keys/syme`
+* [Register as a GitHub OAuth application](https://github.com/settings/applications/new)
+
+* Export `$OAUTH_CLIENT_ID` and `$OAUTH_CLIENT_SECRET`
+
+* Generate an SSH keypair with no passphrase: `ssh-keygen -P "" -f syme`
+
+* Export the pubkey as `$PUBLIC_KEY` and the private key as
+  `$PRIVATE_KEY` (you will have to replace newlines with "\n")
+
+### Additional optional steps for additional features
 
 * Generate 16 random characters and export it as `$SESSION_SECRET`.
   Needed if you want cookies to outlast server restarts.
@@ -59,7 +64,7 @@ Optional:
   "%s.%s.syme.in". The `%s` places will be filled with the instance
   owner and instance id.
 
-* Host the DNS under Route53 and export the `$ZONE_ID`.
+* Host the DNS under Route53 and export its `$ZONE_ID`.
 
 ## License
 

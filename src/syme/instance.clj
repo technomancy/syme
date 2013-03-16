@@ -32,12 +32,12 @@
   (str (io/file (System/getProperty "user.dir") "keys" "syme")))
 
 (def write-key-pair
-  (delay
-   (.mkdirs (.getParentFile (io/file syme-pubkey)))
-   (io/copy (.getBytes (.replaceAll (env :private-key) "\\\\n" "\n"))
-            (io/file syme-privkey))
-   (io/copy (.getBytes (env :public-key))
-            (io/file syme-pubkey))))
+  (delay (when (env :private-key)
+           (.mkdirs (.getParentFile (io/file syme-pubkey)))
+           (io/copy (.getBytes (.replaceAll (env :private-key) "\\\\n" "\n"))
+                    (io/file syme-privkey))
+           (io/copy (.getBytes (env :public-key))
+                    (io/file syme-pubkey)))))
 
 (defn subdomain-for [{:keys [owner id]}]
   (format (:subdomain env) owner id))
@@ -68,7 +68,7 @@
     security-group-name))
 
 (defn import-key-pair [client pubkey]
-  (try (.importKeyPair client (ImportKeyPairRequest. "syme" pubkey))
+  (try (.importKeyPair client (ImportKeyPairRequest. "syme-keys" pubkey))
        (catch Exception e
          (when-not (= "InvalidKeyPair.Duplicate" (.getErrorCode e))))))
 
@@ -90,7 +90,7 @@
                             (.withInstanceType "m1.small")
                             (.withMinCount (Integer. 1))
                             (.withMaxCount (Integer. 1))
-                            (.withKeyName "syme")
+                            (.withKeyName "syme-keys")
                             (.withSecurityGroups [security-group])
                             (.withUserData (String.
                                             (Base64/encodeBase64
