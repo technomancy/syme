@@ -154,8 +154,7 @@
         (.printStackTrace e)
         (db/status username project
                    (if (and (instance? com.amazonaws.AmazonServiceException e)
-                            (= "AuthFailure" (.getMessage e)))
-                     ;; TODO: this isn't being detected correctly
+                            (= "AuthFailure" (.getErrorCode e)))
                      "unauthorized"
                      (:status (ex-data e) "error")))))))
 
