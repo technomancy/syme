@@ -30,7 +30,9 @@
        " | " [:a {:href "https://github.com/technomancy/syme"}
               "Source"]
        " | " (if username
-               [:a {:href "/logout"} "Log out"]
+               (list [:a {:href "/status"} "Status"]
+                     " | "
+                     [:a {:href "/logout"} "Log out"])
                [:a {:href login-url} "Log in"])]]]]))
 
 (defn splash [username]
@@ -78,12 +80,23 @@
 
 (defonce icon (memoize (comp :avatar_url users/user)))
 
-(defn instance [username {:keys [project status description ip invitees]}]
+(defn- link-syme-project [project]
+  (format "/project/%s" project))
+
+(defn- link-github-project [project]
+  (format "https://github.com/%s" project))
+
+(defn- render-instance-info [{status :status project :project description :description} link-project]
+  [:p
+   [:p {:id "status" :class status} status]
+   [:h3.project [:a {:href (link-project project)} project]]
+   [:p {:id "desc"} description]])
+
+(defn instance [username {:keys [project status description ip invitees]
+                          :as instance-info}]
   (layout
    [:div
-    [:p {:id "status" :class status} status]
-    [:h3.project [:a {:href (format "https://github.com/%s" project)} project]]
-    [:p {:id "desc"} description]
+    (render-instance-info instance-info link-github-project)
     [:hr]
     (if ip
       [:div
@@ -107,3 +120,20 @@
                         (format "watch_status('%s')" project)
                         (format "wait_for_boot('%s')" project))}]]
    username project))
+
+(defn status [username instances]
+  (layout
+   [:div
+    [:h3 "Instances"]
+    (if instances
+      (map #(render-instance-info % link-syme-project) instances)
+      [:p "You have no instances"])
+    [:p
+     "You may want to periodically check your "
+     [:a {:href "https://console.aws.amazon.com/ec2/home?region=us-west-2#s=Instances"}
+      "AWS EC2 console"]
+     " to ensure you aren't billed for instances you intended to stop that"
+     " stayed running due to problems with Syme. In particular this happens"
+     " due to timeout errors."
+     ]]
+   username "Status"))
