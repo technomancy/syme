@@ -45,10 +45,8 @@ Inspired by [pair.io](http://pair.io).
 
 * Export `$OAUTH_CLIENT_ID` and `$OAUTH_CLIENT_SECRET`
 
-* Generate an SSH keypair with no passphrase: `ssh-keygen -P "" -f syme`
-
-* Export the pubkey as `$PUBLIC_KEY` and the private key as
-  `$PRIVATE_KEY` (you will have to replace newlines with "\n")
+If you don't set these, Syme will use an OAuth registration which is
+only valid for `http://localhost:5000`.
 
 ### Additional optional steps for additional features
 
@@ -56,7 +54,7 @@ Inspired by [pair.io](http://pair.io).
   Needed if you want cookies to outlast server restarts.
 
 * Export `$CANONICAL_URL` as the fully-qualified URL of the splash page.
-  Needed if you want shutdown hooks to register instance status.
+  Needed if you want hooks to update instance status.
 
 * Sign up for Amazon Route53 and export `$AWS_ACCESS_KEY` and `$AWS_SECRET_KEY`.
 

@@ -6,7 +6,6 @@
             [tentacles.repos :as repos]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
-            [clojure.java.shell :as sh]
             [clojure.string :as string]
             [syme.db :as db]
             [syme.dns :as dns])
@@ -15,7 +14,6 @@
            (com.amazonaws.services.ec2.model CreateSecurityGroupRequest
                                              AuthorizeSecurityGroupIngressRequest
                                              IpPermission
-                                             ImportKeyPairRequest
                                              RunInstancesRequest
                                              DescribeInstancesRequest
                                              TerminateInstancesRequest)
@@ -24,20 +22,6 @@
 (defn make-client [identity credential]
   (doto (AmazonEC2Client. (BasicAWSCredentials. identity credential))
     (.setEndpoint "ec2.us-west-2.amazonaws.com")))
-
-(def syme-pubkey
-  (str (io/file (System/getProperty "user.dir") "keys" "syme.pub")))
-
-(def syme-privkey
-  (str (io/file (System/getProperty "user.dir") "keys" "syme")))
-
-(def write-key-pair
-  (delay (when (env :private-key)
-           (.mkdirs (.getParentFile (io/file syme-pubkey)))
-           (io/copy (.getBytes (.replaceAll (env :private-key) "\\\\n" "\n"))
-                    (io/file syme-privkey))
-           (io/copy (.getBytes (env :public-key))
-                    (io/file syme-pubkey)))))
 
 (defn subdomain-for [{:keys [owner id]}]
   (format (:subdomain env) owner id))
@@ -67,11 +51,6 @@
              (throw e))))
     security-group-name))
 
-(defn import-key-pair [client pubkey]
-  (try (.importKeyPair client (ImportKeyPairRequest. "syme-keys" pubkey))
-       (catch Exception e
-         (when-not (= "InvalidKeyPair.Duplicate" (.getErrorCode e))))))
-
 (defn user-data [username project invitees]
   (let [{:keys [language]} (apply repos/specific-repo (.split project "/"))
         {:keys [name email]} (users/user username)
@@ -81,9 +60,9 @@
         language-script (io/resource (str "languages/" language ".sh"))]
     (format (slurp (io/resource "userdata.sh"))
             username project invitees name email
-            (if language-script (slurp language-script) "")
-            (str (:canonical-url env) "/status?status=halted&token="
-                 shutdown_token))))
+            (and (:canonical-url env)
+                 (str (:canonical-url env) "/status?token=" shutdown_token))
+            (and language-script (slurp language-script) ""))))
 
 (defn run-instance [client security-group user-data-script]
   (.runInstances client (-> (RunInstancesRequest.)
@@ -91,7 +70,6 @@
                             (.withInstanceType "m1.small")
                             (.withMinCount (Integer. 1))
                             (.withMaxCount (Integer. 1))
-                            (.withKeyName "syme-keys")
                             (.withSecurityGroups [security-group])
                             (.withUserData (String.
                                             (Base64/encodeBase64
@@ -111,21 +89,8 @@
       ip
       (recur client id (inc tries)))))
 
-(defn poll-for-bootstrapped [username project ip tries]
-  (let [{:keys [exit]} (sh/sh "ssh" "-i" syme-privkey
-                              "-o" "StrictHostKeyChecking=no"
-                              (str "ubuntu@" ip)
-                              "ls" "/home/ubuntu/bootstrapped")]
-    (Thread/sleep 5000)
-    (if (pos? exit)
-      (if (> tries 60)
-        (throw (ex-info "Timed out bootstrapping." {:status "unconfigured"}))
-        (recur username project ip (inc tries)))
-      (db/status username project "ready"))))
-
 ;; TODO: break this into several defns
 (defn launch [username {:keys [project invite identity credential]}]
-  (force write-key-pair)
   (db/create username project)
   (future
     (try
@@ -137,9 +102,8 @@
           (doseq [invitee invitees]
             (db/invite username project invitee)))
         (db/status username project "bootstrapping")
-        (println "Setting up security group and key for" project "...")
+        (println "Setting up security group for" project "...")
         (create-security-group client security-group-name)
-        (import-key-pair client (slurp syme-pubkey))
         (println "launching" project "...")
         (let [result (run-instance client security-group-name
                                    (user-data username project invitees))
@@ -148,8 +112,8 @@
           (let [ip (poll-for-ip client id 0)]
             (println "got IP:" ip)
             ;; TODO: register subdomain
-            (db/status username project "configuring" {:ip ip :instance_id id})
-            (poll-for-bootstrapped username project ip 0))))
+            (db/status username project "configuring"
+                       {:ip ip :instance_id id}))))
       (catch Exception e
         (.printStackTrace e)
         (db/status username project
