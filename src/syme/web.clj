@@ -72,9 +72,9 @@
         {:status (if (:ip instance) 200 202)
          :headers {"Content-Type" "application/json"}
          :body (json/encode instance)})
-   (POST "/shutdown" {{:keys [token]} :params}
-         (when-let [{:keys [owner project]} (db/by-token token)]
-           (db/status owner project "halted")
+   (POST "/status" {{:keys [token status]} :params}
+         (when-let [{:keys [id]} (db/by-token token)]
+           (db/update-status id {:status status})
            {:status 200
             :headers {"Content-Type" "text/plain"}
             :body "OK"}))

@@ -82,7 +82,8 @@
     (format (slurp (io/resource "userdata.sh"))
             username project invitees name email
             (if language-script (slurp language-script) "")
-            (str (:canonical-url env) "/shutdown?token=" shutdown_token))))
+            (str (:canonical-url env) "/status?status=halted&token="
+                 shutdown_token))))
 
 (defn run-instance [client security-group user-data-script]
   (.runInstances client (-> (RunInstancesRequest.)
