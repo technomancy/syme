@@ -1,11 +1,9 @@
 (ns syme.html
-  (:require [hiccup.page :refer [html5 doctype include-css]]
-            [environ.core :refer [env]]
+  (:require [clojure.java.io :as io]
             [tentacles.repos :as repos]
             [tentacles.users :as users]
-            [syme.db :as db]
-            [clojure.java.io :as io]
-            [clojure.java.jdbc :as sql]))
+            [environ.core :refer [env]]
+            [hiccup.page :refer [html5 include-css]]))
 
 (def login-url (str "https://github.com/login/oauth/authorize?"
                     "client_id=" (env :oauth-client-id)))

@@ -1,21 +1,18 @@
 (ns syme.instance
-  (:require [clj-http.client :as http]
-            [environ.core :refer [env]]
-            [tentacles.users :as users]
-            [tentacles.orgs :as orgs]
-            [tentacles.repos :as repos]
-            [clojure.java.io :as io]
+  (:require [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
-            [clojure.string :as string]
             [syme.db :as db]
-            [syme.dns :as dns])
+            [syme.dns :as dns]
+            [tentacles.repos :as repos]
+            [tentacles.users :as users]
+            [environ.core :refer [env]])
   (:import (com.amazonaws.auth BasicAWSCredentials)
            (com.amazonaws.services.ec2 AmazonEC2Client)
-           (com.amazonaws.services.ec2.model CreateSecurityGroupRequest
-                                             AuthorizeSecurityGroupIngressRequest
+           (com.amazonaws.services.ec2.model AuthorizeSecurityGroupIngressRequest
+                                             CreateSecurityGroupRequest
+                                             DescribeInstancesRequest
                                              IpPermission
                                              RunInstancesRequest
-                                             DescribeInstancesRequest
                                              TerminateInstancesRequest)
            (org.apache.commons.codec.binary Base64)))
 

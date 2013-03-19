@@ -2,12 +2,11 @@
   (:require [environ.core :refer [env]])
   (:import (com.amazonaws.auth BasicAWSCredentials)
            (com.amazonaws.services.route53 AmazonRoute53Client)
-           (com.amazonaws.services.route53.model GetHostedZoneRequest
+           (com.amazonaws.services.route53.model Change ChangeBatch
                                                  ChangeResourceRecordSetsRequest
-                                                 ChangeBatch Change
-                                                 ListResourceRecordSetsRequest
-                                                 ResourceRecordSet
-                                                 ResourceRecord)))
+                                                 GetHostedZoneRequest
+                                                 ResourceRecord
+                                                 ResourceRecordSet)))
 
 (def client (delay (AmazonRoute53Client. (BasicAWSCredentials.
                                           (env :aws-access-key)

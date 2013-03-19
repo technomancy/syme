@@ -1,9 +1,9 @@
 (ns syme.db
-  (:refer-clojure :exclude [find])
   (:require [clojure.java.jdbc :as sql]
-            [tentacles.repos :as repos]
-            [environ.core :as env])
-  (:import (java.util UUID)))
+            [environ.core :as env]
+            [tentacles.repos :as repos])
+  (:import (java.util UUID))
+  (:refer-clojure :exclude [find]))
 
 (def db (env/env :database-url "postgres://localhost:5432/syme"))
 

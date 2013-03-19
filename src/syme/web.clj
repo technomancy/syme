@@ -1,23 +1,20 @@
 (ns syme.web
-  (:require [compojure.core :refer [routes GET PUT POST DELETE ANY]]
-            [compojure.handler :refer [site]]
+  (:require [cheshire.core :as json]
+            [clj-http.client :as http]
             [compojure.route :as route]
-            [clojure.java.io :as io]
-            [clojure.java.jdbc :as sql]
-            [ring.middleware.stacktrace :as trace]
-            [ring.middleware.session :as session]
+            [noir.util.middleware :as noir]
+            [ring.adapter.jetty :as jetty]
+            [ring.middleware.file-info :as file-info]
             [ring.middleware.resource :as resource]
             [ring.middleware.session.cookie :as cookie]
-            [ring.middleware.file-info :as file-info]
-            [ring.adapter.jetty :as jetty]
+            [ring.middleware.stacktrace :as trace]
             [ring.util.response :as res]
-            [noir.util.middleware :as noir]
-            [environ.core :refer [env]]
-            [clj-http.client :as http]
-            [cheshire.core :as json]
-            [syme.html :as html]
             [syme.db :as db]
-            [syme.instance :as instance]))
+            [syme.html :as html]
+            [syme.instance :as instance]
+            [compojure.core :refer [ANY DELETE GET POST routes]]
+            [compojure.handler :refer [site]]
+            [environ.core :refer [env]]))
 
 ;; pre-registered for http://localhost:5000
 (def dev-oauth {:client_id "49f1d4f840b69779374c"
