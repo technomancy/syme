@@ -52,6 +52,12 @@
           (assoc instance
             :invitees (mapv :invitee invitees)))))))
 
+(defn find-all [username]
+  (sql/with-connection db
+    (sql/with-query-results instances
+      ["SELECT * FROM instances WHERE owner = ? ORDER BY at DESC" username]
+      (doall instances))))
+
 (defn by-token [shutdown-token]
   (sql/with-connection db
     (sql/with-query-results [instance]
