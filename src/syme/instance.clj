@@ -20,8 +20,8 @@
   (doto (AmazonEC2Client. (BasicAWSCredentials. identity credential))
     (.setEndpoint "ec2.us-west-2.amazonaws.com")))
 
-(defn subdomain-for [instance-id owner]
-  (format (:subdomain env) instance-id owner))
+(defn subdomain-for [owner instance-id]
+  (format (:subdomain env) owner instance-id))
 
 (defn create-security-group [client security-group-name]
   (let [group-request (-> (CreateSecurityGroupRequest.)
@@ -104,10 +104,11 @@
           (println "waiting for IP...")
           (let [ip (poll-for-ip client instance-id 0)
                 {:keys [id]} (db/find username project)
-                dns (subdomain-for id username)]
+                dns (subdomain-for username id)]
             (println "got IP:" ip)
             (db/status username project "configuring"
-                       {:ip ip :instance_id instance-id :dns dns}))))
+                       {:ip ip :instance_id instance-id :dns dns})
+            (dns/register-hostname dns ip))))
       (catch Exception e
         (.printStackTrace e)
         (db/status username project
