@@ -1,4 +1,4 @@
-sudo apt-get install -y postgresql-9.1
+sudo apt-get install -y postgresql-9.1 postgresql-client-9.1
 sudo /etc/init.d/postgresql stop
 sudo chown -R syme /var/*/postgresql
 
