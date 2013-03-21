@@ -59,7 +59,8 @@ only valid for `http://localhost:5000`.
 * Sign up for Amazon Route53 and export `$AWS_ACCESS_KEY` and `$AWS_SECRET_KEY`.
 
 * Register a domain and export it as `$SUBDOMAIN` formatted like
-  "%s.syme.in". The `%s` places will be filled with the instance owner.
+  "%s.%s.syme.in". The `%s` places will be filled with the instance id
+  and instance owner.
 
 * Host the DNS under Route53 and export its `$ZONE_ID`.
 

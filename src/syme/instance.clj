@@ -99,14 +99,15 @@
         (println "launching" project "...")
         (let [result (run-instance client security-group-name
                                    (user-data username project invitees))
-              id (-> result .getReservation .getInstances first .getInstanceId)]
+              instance-id (-> result .getReservation .getInstances
+                              first .getInstanceId)]
           (println "waiting for IP...")
-          (let [ip (poll-for-ip client id 0)
+          (let [ip (poll-for-ip client instance-id 0)
                 {:keys [id]} (db/find username project)
                 dns (subdomain-for id username)]
             (println "got IP:" ip)
             (db/status username project "configuring"
-                       {:ip ip :instance_id id :dns dns}))))
+                       {:ip ip :instance_id instance-id :dns dns}))))
       (catch Exception e
         (.printStackTrace e)
         (db/status username project
