@@ -71,6 +71,7 @@ done
 
 # packages
 
+echo "APT::Install-Recommends \"0\";" > /etc/apt/apt.conf.d/50norecommends
 apt-get update
 apt-get install -y git tmux
 
