@@ -70,36 +70,36 @@ div p#status.bootstrapping {
     color: orange;
 }
 
-div p#status.halted {
-    color: red;
-}
-
-div p#status.halting {
-    color: red;
-}
-
-div p#status.failed {
-    color: brown;
-}
-
-div p#status.unauthorized {
-    color: brown;
-}
-
-div p#status.error {
-    color: brown;
-}
-
-div p#status.timeout {
-    color: brown;
-}
-
 div p#status.configuring {
     color: orange;
 }
 
 div p#status.ready {
     color: green;
+}
+
+div p#status.halted {
+    color: brown;
+}
+
+div p#status.halting {
+    color: brown;
+}
+
+div p#status.failed {
+    color: red;
+}
+
+div p#status.unauthorized {
+    color: red;
+}
+
+div p#status.error {
+    color: red;
+}
+
+div p#status.timeout {
+    color: red;
 }
 
 html kbd {
