@@ -117,7 +117,7 @@
 
 (defn wrap-login [handler]
   (fn [req]
-    (if (or (#{"/" "/launch" "/oauth" "/faq" "/shutdown"} (:uri req))
+    (if (or (#{"/" "/launch" "/oauth" "/faq" "/status"} (:uri req))
             (:username (:session req)))
       (handler req)
       (throw (ex-info "Must be logged in." {:status 401})))))
