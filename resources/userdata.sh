@@ -107,7 +107,7 @@ sudo -iu syme git clone --depth=1 git://github.com/$USERNAME/.symerc && \
 
 echo "curl -XPOST '${UPDATE_URL}&status=halted'" > /etc/init.d/syme-shutdown
 chmod 755 /etc/init.d/syme-shutdown
-update-rc.d syme-shutdown defaults
+update-rc.d syme-shutdown defaults # TODO: runlevel 0
 
 # Wrapping up
 

@@ -20,8 +20,8 @@
   (doto (AmazonEC2Client. (BasicAWSCredentials. identity credential))
     (.setEndpoint "ec2.us-west-2.amazonaws.com")))
 
-(defn subdomain-for [{:keys [owner id]}]
-  (format (:subdomain env) owner id))
+(defn subdomain-for [owner]
+  (format (:subdomain env) owner))
 
 (defn unregister-dns [username project]
   (when-let [{:keys [ip] :as record} (db/find username project)]
@@ -106,11 +106,12 @@
                                    (user-data username project invitees))
               id (-> result .getReservation .getInstances first .getInstanceId)]
           (println "waiting for IP...")
-          (let [ip (poll-for-ip client id 0)]
+          (let [ip (poll-for-ip client id 0)
+                dns (subdomain-for username)]
             (println "got IP:" ip)
-            ;; TODO: register subdomain
+            (dns/update ip dns)
             (db/status username project "configuring"
-                       {:ip ip :instance_id id}))))
+                       {:ip ip :instance_id id :dns dns}))))
       (catch Exception e
         (.printStackTrace e)
         (db/status username project
