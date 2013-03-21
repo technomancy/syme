@@ -31,18 +31,3 @@
 
 (defn deregister-hostname [hostname ip]
   (make-request [(make-change "DELETE" hostname ip)]))
-
-(defn get-ip-for [dns]
-  (let [zone-req (GetHostedZoneRequest. (env :zone-id))
-        zone (.getHostedZone (.getHostedZone @client zone-req))
-        req (doto (ListResourceRecordSetsRequest. (.getId zone))
-              (.setMaxItems "1")
-              (.setStartRecordName dns)
-              (.setStartRecordType "A"))]
-    (-> (.listResourceRecordSets @client req)
-        .getResourceRecordSets first .getResourceRecords first .getValue)))
-
-(defn update [new-ip dns]
-  (when-let [old-ip (get-ip-for dns)]
-    (deregister-hostname dns old-ip))
-  (register-hostname dns new-ip))

@@ -109,7 +109,6 @@
           (let [ip (poll-for-ip client id 0)
                 dns (subdomain-for username)]
             (println "got IP:" ip)
-            (dns/update ip dns)
             (db/status username project "configuring"
                        {:ip ip :instance_id id :dns dns}))))
       (catch Exception e
