@@ -81,6 +81,9 @@
 (defn add-shutdown-token []
   (sql/do-commands "ALTER TABLE instances ADD COLUMN shutdown_token VARCHAR"))
 
+(defn add-dns []
+  (sql/do-commands "ALTER TABLE instances ADD COLUMN dns VARCHAR"))
+
 ;; migrations mechanics
 
 (defn run-and-record [migration]
@@ -107,4 +110,5 @@
 (defn -main []
   (migrate #'initial-schema
            #'add-instance-id
-           #'add-shutdown-token))
+           #'add-shutdown-token
+           #'add-dns))
