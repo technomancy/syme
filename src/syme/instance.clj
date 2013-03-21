@@ -13,7 +13,11 @@
                                              DescribeInstancesRequest
                                              IpPermission
                                              RunInstancesRequest
-                                             TerminateInstancesRequest)
+                                             TerminateInstancesRequest
+                                             DescribeInstancesRequest
+                                             TerminateInstancesRequest
+                                             CreateTagsRequest
+                                             Tag)
            (org.apache.commons.codec.binary Base64)))
 
 (defn make-client [identity credential]
@@ -67,6 +71,12 @@
                                             (Base64/encodeBase64
                                              (.getBytes user-data-script)))))))
 
+(defn set-instance-name [client id name]
+  (let [tag-name-request (-> (CreateTagsRequest.)
+                         (.withResources [id])
+                         (.withTags [(Tag. "Name" name)]))]
+    (.createTags client tag-name-request)))
+
 (defn poll-for-ip [client id tries]
   (let [describe-request (-> (DescribeInstancesRequest.)
                              (.withInstanceIds [id]))]
@@ -101,6 +111,8 @@
                                    (user-data username project invitees))
               instance-id (-> result .getReservation .getInstances
                               first .getInstanceId)]
+          (println "setting instance name to" project)
+          (set-instance-name client instance-id project)
           (println "waiting for IP...")
           (let [ip (poll-for-ip client instance-id 0)
                 {:keys [id]} (db/find username project)
