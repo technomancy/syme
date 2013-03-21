@@ -75,7 +75,10 @@
   (let [tag-name-request (-> (CreateTagsRequest.)
                          (.withResources [id])
                          (.withTags [(Tag. "Name" name)]))]
-    (.createTags client tag-name-request)))
+    (try (.createTags client tag-name-request)
+         ;; this is a convenience thing; non-critical
+         (catch Exception e
+           (println (.getMessage e))))))
 
 (defn poll-for-ip [client id tries]
   (let [describe-request (-> (DescribeInstancesRequest.)
