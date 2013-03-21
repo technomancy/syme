@@ -10,6 +10,7 @@
             [ring.middleware.stacktrace :as trace]
             [ring.util.response :as res]
             [syme.db :as db]
+            [syme.dns :as dns]
             [syme.html :as html]
             [syme.instance :as instance]
             [compojure.core :refer [ANY DELETE GET POST routes]]
@@ -70,8 +71,10 @@
          :headers {"Content-Type" "application/json"}
          :body (json/encode instance)})
    (POST "/status" {{:keys [token status]} :params}
-         (when-let [{:keys [id]} (db/by-token token)]
+         (when-let [{:keys [id dns ip]} (db/by-token token)]
            (db/update-status id {:status status})
+           (when (= "shutdown" status)
+             (dns/deregister-hostname dns ip))
            {:status 200
             :headers {"Content-Type" "text/plain"}
             :body "OK"}))
@@ -132,6 +135,9 @@
                req))))
 
 (defn -main [& [port]]
+  (try (db/-main)
+       (catch Exception e
+         (println (.getMessage e))))
   (let [port (Integer. (or port (env :port) 5000))
         store (cookie/cookie-store {:key (env :session-secret)})]
     (jetty/run-jetty (-> #'app
