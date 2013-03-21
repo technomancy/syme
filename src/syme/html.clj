@@ -84,19 +84,19 @@
 (defn- link-github-project [project]
   (format "https://github.com/%s" project))
 
-(defn- render-instance-info [{status :status project :project description :description} link-project]
+(defn- render-instance-info [{:keys [status project description]} link-project]
   [:p
    [:p {:id "status" :class status} status]
    [:h3.project [:a {:href (link-project project)} project]]
    [:p {:id "desc"} description]])
 
-(defn instance [username {:keys [project status description ip invitees]
+(defn instance [username {:keys [project status description ip dns invitees]
                           :as instance-info}]
   (layout
    [:div
     (render-instance-info instance-info link-github-project)
     [:hr]
-    (if ip
+    (if (or dns ip)
       [:div
        ;; TODO: remove inline styles
        [:p {:id "haltbutton" :style "float: right; margin: -7px 0;"}
@@ -106,7 +106,7 @@
         [:button {:onclick (format "halt('%s')" project)} "Confirm"]]
        [:p {:id "ip" :class status
             :title "Send this command to the users you've invited."}
-        [:tt "ssh syme@" ip]]]
+        [:tt "ssh syme@" (or dns ip)]]]
       [:p "Waiting to boot... could take a few minutes."])
     [:hr]
     [:ul {:id "users"}
