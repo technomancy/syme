@@ -14,11 +14,12 @@
                                           (env :aws-secret-key)))))
 
 (defn make-request [changes]
-  (let [zone-req (GetHostedZoneRequest. (env :zone-id))
-        zone (.getHostedZone (.getHostedZone @client zone-req))
-        changes (ChangeBatch. changes)
-        req (ChangeResourceRecordSetsRequest. (.getId zone) changes)]
-    (.changeResourceRecordSets @client req)))
+  (when (:aws-access-key env)
+    (let [zone-req (GetHostedZoneRequest. (env :zone-id))
+          zone (.getHostedZone (.getHostedZone @client zone-req))
+          changes (ChangeBatch. changes)
+          req (ChangeResourceRecordSetsRequest. (.getId zone) changes)]
+      (.changeResourceRecordSets @client req))))
 
 (defn make-change [change-type hostname ip]
   (Change. change-type
