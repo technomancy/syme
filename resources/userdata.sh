@@ -10,6 +10,9 @@ FULLNAME="%s"
 EMAIL="%s"
 UPDATE_URL="%s"
 
+PROJECT_PARTS=(${PROJECT//\// })
+PROJECT_DIR="/home/syme/${PROJECT_PARTS[1]}/"
+
 wget -qO /etc/motd.tail https://raw.github.com/technomancy/syme/master/resources/motd-pending &
 
 # user
@@ -73,7 +76,9 @@ done
 
 echo "APT::Install-Recommends \"0\";" > /etc/apt/apt.conf.d/50norecommends
 apt-get update
-apt-get install -y git tmux
+apt-get install -y git tmux molly-guard
+
+rm /etc/molly-guard/run.d/30-query-hostname # not using molly-guard for that
 
 # clone repo
 
@@ -95,8 +100,7 @@ fi
 
 # Project-specific configuration
 
-PROJECT_PARTS=(${PROJECT//\// })
-PROJECT_SYMERC="/home/syme/${PROJECT_PARTS[1]}/.symerc"
+PROJECT_SYMERC="$PROJECT_DIR/.symerc"
 [ -x $PROJECT_SYMERC ] && sudo -iu syme $PROJECT_SYMERC
 
 # User-specific configuration
@@ -109,6 +113,28 @@ sudo -iu syme git clone --depth=1 git://github.com/$USERNAME/.symerc && \
 echo "curl -XPOST '${UPDATE_URL}&status=halted'" > /etc/init.d/syme-shutdown
 chmod 755 /etc/init.d/syme-shutdown
 update-rc.d syme-shutdown defaults # TODO: runlevel 0
+
+cat > /etc/molly-guard/run.d/30-syme-clean-checkout <<EOF
+if [ ! -r "$PROJECT_DIR" ]; then
+  exit 0
+fi
+
+status=\$(cd $PROJECT_DIR && git status)
+
+if [ "\$(echo \$status | grep "branch is ahead of")" != "" ]; then
+    echo "You have unpushed changes in $PROJECT_DIR."
+    echo "Either delete it or push before shutting down."
+    exit 1
+fi
+
+if [ "\$(echo \$status | grep "working directory clean")" = "" ]; then
+    echo "You have uncommitted changes in $PROJECT_DIR."
+    echo "Either delete it or check them in and push before shutting down."
+    exit 1
+fi
+EOF
+
+chmod 755 /etc/molly-guard/run.d/30-syme-clean-checkout
 
 # Wrapping up
 
