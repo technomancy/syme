@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# For usage outside of Syme:
+# curl -L http://git.io/addkey > /usr/local/bin/add-github-key
+
 set -e
 
 if [ -z "$1" ]; then
