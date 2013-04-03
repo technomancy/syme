@@ -4,6 +4,7 @@
             [syme.db :as db]
             [syme.dns :as dns]
             [tentacles.repos :as repos]
+            [tentacles.orgs :as orgs]
             [tentacles.users :as users]
             [environ.core :refer [env]])
   (:import (com.amazonaws.auth BasicAWSCredentials)
@@ -47,15 +48,20 @@
              (throw e))))
     security-group-name))
 
+(defn usernames-for [invitees]
+  (let [[orgs users] ((juxt filter remove) #(.startsWith % "+") invitees)
+        orgs-users (for [org orgs]
+                    (map :login (orgs/members (subs org 1))))]
+    (clojure.string/join " " (apply concat users orgs-users))))
+
 (defn user-data [username project invitees]
   (let [{:keys [language]} (apply repos/specific-repo (.split project "/"))
         {:keys [name email]} (users/user username)
         {:keys [shutdown_token]} (db/find username project)
-        ;; TODO: expand orgs into member usernames
-        invitees (clojure.string/join " " invitees)
+        usernames (usernames-for invitees)
         language-script (io/resource (str "languages/" language ".sh"))]
     (format (slurp (io/resource "userdata.sh"))
-            username project invitees name email
+            username project usernames name email
             (and (:canonical-url env)
                  (str (:canonical-url env) "/status?token=" shutdown_token))
             (and language-script (slurp language-script) ""))))
