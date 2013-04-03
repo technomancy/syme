@@ -1,1 +1,1 @@
-apt-get install ruby-full
+apt-get install ruby-full ruby-dev build-essential
