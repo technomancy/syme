@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+if [ -z "$1" ]; then
+    echo "Usage: \$0 GITHUB_USERNAME"
+    exit 1
+else
+    mkdir -p $HOME/.ssh
+    wget -qO- https://github.com/$1.keys >> $HOME/.ssh/authorized_keys
+    echo >> $HOME/.ssh/authorized_keys
+fi
