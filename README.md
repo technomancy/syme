@@ -15,7 +15,7 @@ Instant collaboration on GitHub projects.
 > "A very entertaining evening," said Syme, and he made a military
 > salute with the sword-stick as the steamboat slid away.
 
-- The Man who was Thursday, by G.K. Chesterton
+— The Man who was Thursday, by G.K. Chesterton
 
 ## Usage
 
@@ -25,8 +25,9 @@ Instant collaboration on GitHub projects.
 4. SSH into the instance once it's booted using the command shown and launch `tmux`.
 5. Send the login info to the users you have invited.
 
-Syme handles launching the instance, setting up public keys, and
-cloning the repository in question.
+To invite a whole GitHub organization, simply prefix the organization
+name with a `+` in the form. Syme handles launching the instance,
+setting up public keys, and cloning the repository in question.
 
 Your AWS credentials are kept in an encrypted cookie in your browser
 and aren't stored server-side beyond the scope of your request.

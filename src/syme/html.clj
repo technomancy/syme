@@ -126,6 +126,7 @@
     (if instances
       (map #(render-instance-info % link-syme-project) instances)
       [:p "You have no instances"])
+    [:hr]
     [:p
      "You may want to periodically check your "
      [:a {:href "https://console.aws.amazon.com/ec2/home?region=us-west-2#s=Instances"}

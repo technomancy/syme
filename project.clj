@@ -1,4 +1,4 @@
-(defproject syme "1.0.0"
+(defproject syme "1.1.0"
   :description "Instant collaboration on GitHub projects over tmux."
   :url "http://syme.herokuapp.com"
   :license "Eclipse Public License 1.0"
