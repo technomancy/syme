@@ -49,19 +49,19 @@
     security-group-name))
 
 (defn usernames-for [invitees]
-  (let [[orgs users] ((juxt filter remove) #(.startsWith % "+") invitees)
+  (let [invitees (.split inviteees ",? +")
+        [orgs users] ((juxt filter remove) #(.startsWith % "+") invitees)
         orgs-users (for [org orgs]
                     (map :login (orgs/members (subs org 1))))]
-    (clojure.string/join " " (apply concat users orgs-users))))
+    (apply concat users orgs-users)))
 
 (defn user-data [username project invitees]
   (let [{:keys [language]} (apply repos/specific-repo (.split project "/"))
         {:keys [name email]} (users/user username)
         {:keys [shutdown_token]} (db/find username project)
-        usernames (usernames-for invitees)
         language-script (io/resource (str "languages/" language ".sh"))]
     (format (slurp (io/resource "userdata.sh"))
-            username project usernames name email
+            username project (clojure.string/join " " invitees) name email
             (and (:canonical-url env)
                  (str (:canonical-url env) "/status?token=" shutdown_token))
             (and language-script (slurp language-script) ""))))
@@ -107,7 +107,7 @@
     (try
       (let [client (make-client identity credential)
             invitees (cons username (if-not (= invite "users to invite")
-                                      (.split invite ",? +")))
+                                      (usernames-for invite)))
             security-group-name (str "syme/" username)]
         (sql/with-connection db/db
           (doseq [invitee invitees]
