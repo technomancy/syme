@@ -41,8 +41,8 @@
         {:headers {"Content-Type" "text/html"}
          :status 200
          :body (html/splash username)})
-   (GET "/status" {{:keys [username]} :session}
-        (html/status username (db/find-all username)))
+   (GET "/all" {{:keys [username]} :session}
+        (html/all username (db/find-all username)))
    (GET "/launch" {{:keys [username] :as session} :session
                    {:keys [project]} :params}
         (if-let [instance (db/find username project)]
@@ -122,7 +122,7 @@
 
 (defn wrap-login [handler]
   (fn [req]
-    (if (or (#{"/" "/launch" "/oauth" "/faq" "/status"} (:uri req))
+    (if (or (#{"/" "/launch" "/oauth" "/faq" "/all"} (:uri req))
             (:username (:session req)))
       (handler req)
       (throw (ex-info "Must be logged in." {:status 401})))))

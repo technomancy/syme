@@ -28,8 +28,7 @@
        " | " [:a {:href "https://github.com/technomancy/syme"}
               "Source"]
        " | " (if username
-               (list [:a {:href "/status"} "Status"]
-                     " | "
+               (list [:a {:href "/all"} "All Instances"] " | "
                      [:a {:href "/logout"} "Log out"])
                [:a {:href login-url} "Log in"])]]]]))
 
@@ -85,7 +84,7 @@
   (format "https://github.com/%s" project))
 
 (defn- render-instance-info [{:keys [status project description]} link-project]
-  [:p
+  [:div
    [:p {:id "status" :class status} status]
    [:h3.project [:a {:href (link-project project)} project]]
    [:p {:id "desc"} description]])
@@ -119,16 +118,14 @@
                         (format "wait_for_boot('%s')" project))}]]
    username project))
 
-(defn status [username instances]
+(defn all [username instances]
   (layout
-   [:div
-    [:h3 "Instances"]
+   [:div [:h3 "All Instances"]
     (if instances
       (map #(render-instance-info % link-syme-project) instances)
       [:p "You have no instances"])
     [:hr]
-    [:p
-     "You may want to periodically check your "
+    [:p "You may want to periodically check your "
      [:a {:href "https://console.aws.amazon.com/ec2/home?region=us-west-2#s=Instances"}
       "AWS EC2 console"]
      " to ensure you aren't billed for instances you intended to stop that"

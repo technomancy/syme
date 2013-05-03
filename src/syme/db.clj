@@ -30,8 +30,7 @@
   (sql/with-query-results [instance]
     ["SELECT * FROM instances WHERE project = ? and owner = ? ORDER BY at DESC"
      project owner]
-    (sql/insert-record :invites {:instance_id (:id instance)
-                                 :invitee invitee})))
+    (sql/insert-record :invites {:instance_id (:id instance) :invitee invitee})))
 
 (defn find [username project-name & [include-halted?]]
   (sql/with-connection db
