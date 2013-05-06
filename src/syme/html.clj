@@ -68,6 +68,9 @@
        [:input {:type :text :style "width: 320px"
                 :name "credential" :id "credential"
                 :value credential :placeholder "AWS Secret Key"}]
+       [:input {:type :text :name "ami-id"
+              :style "width: 48%; height: 14px; font-weight: bold;"
+              :placeholder "ami id (optional)"}]
        [:hr]
        [:p {:style "float: right; margin-top: 10px; font-size: 80%"}
         "Your credentials are stored in an encrypted cookie, never"

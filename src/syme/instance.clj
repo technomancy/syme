@@ -21,6 +21,8 @@
                                              Tag)
            (org.apache.commons.codec.binary Base64)))
 
+(def default-ami-id "ami-162ea626" )
+
 (defn make-client [identity credential]
   (doto (AmazonEC2Client. (BasicAWSCredentials. identity credential))
     (.setEndpoint "ec2.us-west-2.amazonaws.com")))
@@ -66,9 +68,9 @@
                  (str (:canonical-url env) "/status?token=" shutdown_token))
             (and language-script (slurp language-script) ""))))
 
-(defn run-instance [client security-group user-data-script]
+(defn run-instance [client security-group user-data-script ami-id]
   (.runInstances client (-> (RunInstancesRequest.)
-                            (.withImageId "ami-162ea626")
+                            (.withImageId ami-id)
                             (.withInstanceType "m1.small")
                             (.withMinCount (Integer. 1))
                             (.withMaxCount (Integer. 1))
@@ -101,11 +103,12 @@
       (recur client id (inc tries)))))
 
 ;; TODO: break this into several defns
-(defn launch [username {:keys [project invite identity credential]}]
+(defn launch [username {:keys [project invite identity credential ami-id]}]
   (db/create username project)
   (future
     (try
       (let [client (make-client identity credential)
+            ami-id (if (empty? ami-id) default-ami-id ami-id)
             invitees (cons username (if-not (= invite "users to invite")
                                       (usernames-for invite)))
             security-group-name (str "syme/" username)]
@@ -117,7 +120,8 @@
         (create-security-group client security-group-name)
         (println "launching" project "...")
         (let [result (run-instance client security-group-name
-                                   (user-data username project invitees))
+                                   (user-data username project invitees)
+                                   ami-id)
               instance-id (-> result .getReservation .getInstances
                               first .getInstanceId)]
           (println "setting instance name to" project)
