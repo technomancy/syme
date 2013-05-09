@@ -1,1 +1,1 @@
-web: lein with-profile production trampoline run -m syme.web
+web: java $JVM_OPTS -cp target/syme-standalone.jar clojure.main -m syme.web
