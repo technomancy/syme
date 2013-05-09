@@ -49,7 +49,7 @@
     security-group-name))
 
 (defn usernames-for [invitees]
-  (let [invitees (.split inviteees ",? +")
+  (let [invitees (.split invitees ",? +")
         [orgs users] ((juxt filter remove) #(.startsWith % "+") invitees)
         orgs-users (for [org orgs]
                     (map :login (orgs/members (subs org 1))))]
