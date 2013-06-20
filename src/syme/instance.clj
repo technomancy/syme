@@ -21,11 +21,27 @@
                                              Tag)
            (org.apache.commons.codec.binary Base64)))
 
-(def default-ami-id "ami-162ea626" )
+(def ami-by-region
+  {:sa-east-1 "ami-3bec3426",
+   :ap-northeast-1 "ami-b8a813b9",
+   :ap-southeast-2 "ami-f57ee9cf",
+   :eu-west-1 "ami-26090552",
+   :ap-southeast-1 "ami-4923611b",
+   :us-west-2 "ami-162ea626",
+   :us-west-1 "ami-44745401",
+   :us-east-1 "ami-9b3db0f2"})
 
-(defn make-client [identity credential]
+(defn default-ami-id [region]
+  (get ami-by-region (keyword region)))
+
+(def default-region "us-west-2")
+
+(defn make-endpoint-url [region]
+  (str "ec2." region ".amazonaws.com"))
+
+(defn make-client [identity credential region]
   (doto (AmazonEC2Client. (BasicAWSCredentials. identity credential))
-    (.setEndpoint "ec2.us-west-2.amazonaws.com")))
+    (.setEndpoint (make-endpoint-url region))))
 
 (defn subdomain-for [owner instance-id]
   (format (:subdomain env) owner instance-id))
@@ -103,12 +119,13 @@
       (recur client id (inc tries)))))
 
 ;; TODO: break this into several defns
-(defn launch [username {:keys [project invite identity credential ami-id]}]
-  (db/create username project)
+(defn launch [username {:keys [project invite identity credential ami-id region]}]
+  (db/create username project region)
   (future
     (try
-      (let [client (make-client identity credential)
-            ami-id (if (empty? ami-id) default-ami-id ami-id)
+      (let [client (make-client identity credential region)
+            ami-id (if (empty? ami-id) (default-ami-id region) ami-id)
+            region (if (empty? region) default-region region)
             invitees (cons username (if-not (= invite "users to invite")
                                       (usernames-for invite)))
             security-group-name (str "syme/" username)]
@@ -142,8 +159,8 @@
                      "unauthorized"
                      (:status (ex-data e) "error")))))))
 
-(defn halt [username {:keys [project identity credential]}]
-  (let [client (make-client identity credential)
+(defn halt [username {:keys [project identity credential region]}]
+  (let [client (make-client identity credential region)
         {:keys [instance_id]} (db/find username project)]
     (.terminateInstances client (TerminateInstancesRequest. [instance_id]))
     (db/status username project "halting")))
