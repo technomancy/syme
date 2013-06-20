@@ -86,7 +86,8 @@
                                           instance :instance}
            (do (instance/halt username {:project (str gh-user "/" project)
                                         :identity identity
-                                        :credential credential})
+                                        :credential credential
+                                        :region (:region instance)})
                {:status 200
                 :headers {"Content-Type" "application/json"}
                 :body (json/encode instance)

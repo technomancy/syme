@@ -7,10 +7,12 @@
 
 (def db (env/env :database-url "postgres://localhost:5432/syme"))
 
-(defn create [owner project]
+(defn create [owner project region]
   (let [{:keys [description]} (apply repos/specific-repo (.split project "/"))]
     (sql/with-connection db
-      (sql/insert-record :instances {:project project :owner owner
+      (sql/insert-record :instances {:project project
+                                     :owner owner
+                                     :region region
                                      :status "starting"
                                      :shutdown_token (str (UUID/randomUUID))
                                      :description description}))))
@@ -89,6 +91,9 @@
 (defn add-dns []
   (sql/do-commands "ALTER TABLE instances ADD COLUMN dns VARCHAR"))
 
+(defn add-region []
+  (sql/do-commands "ALTER TABLE instances ADD COLUMN region VARCHAR"))
+
 ;; migrations mechanics
 
 (defn run-and-record [migration]
@@ -116,4 +121,5 @@
   (migrate #'initial-schema
            #'add-instance-id
            #'add-shutdown-token
-           #'add-dns))
+           #'add-dns
+           #'add-region))
