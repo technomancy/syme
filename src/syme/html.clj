@@ -69,10 +69,10 @@
                 :name "credential" :id "credential"
                 :value credential :placeholder "AWS Secret Key"}]
        [:input {:type :text :name "region"
-                :style "width: 48%; height: 14px; font-weight: bold;"
-                :placeholder "us-west-2"}]
+                :style "width: 48%"
+                :placeholder "region (default: us-west-2)"}]
        [:input {:type :text :name "ami-id"
-              :style "width: 48%; height: 14px; font-weight: bold;"
+              :style "width: 48%"
               :placeholder "ami id (optional)"}]
        [:hr]
        [:p {:style "float: right; margin-top: 10px; font-size: 80%"}
@@ -95,7 +95,7 @@
    [:h3.project [:a {:href (link-project project)} project]]
    [:p {:id "desc"} description]])
 
-(defn instance [username {:keys [project status description ip dns invitees region]
+(defn instance [username {:keys [project status description ip dns invitees]
                           :as instance-info}]
   (layout
    [:div
