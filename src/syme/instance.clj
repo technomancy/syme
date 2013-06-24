@@ -39,6 +39,8 @@
 (defn make-endpoint-url [region]
   (str "ec2." region ".amazonaws.com"))
 
+(def default-instance-type "m1.small")
+
 (defn make-client [identity credential region]
   (doto (AmazonEC2Client. (BasicAWSCredentials. identity credential))
     (.setEndpoint (make-endpoint-url region))))
@@ -84,10 +86,10 @@
                  (str (:canonical-url env) "/status?token=" shutdown_token))
             (and language-script (slurp language-script) ""))))
 
-(defn run-instance [client security-group user-data-script ami-id]
+(defn run-instance [client security-group user-data-script ami-id instance-type]
   (.runInstances client (-> (RunInstancesRequest.)
                             (.withImageId ami-id)
-                            (.withInstanceType "m1.small")
+                            (.withInstanceType instance-type)
                             (.withMinCount (Integer. 1))
                             (.withMaxCount (Integer. 1))
                             (.withSecurityGroups [security-group])
@@ -119,13 +121,15 @@
       (recur client id (inc tries)))))
 
 ;; TODO: break this into several defns
-(defn launch [username {:keys [project invite identity credential ami-id region]}]
+(defn launch [username {:keys [project invite identity credential
+                               ami-id region instance-type]}]
   (db/create username project region)
   (future
     (try
       (let [client (make-client identity credential region)
             ami-id (if (empty? ami-id) (default-ami-id region) ami-id)
             region (if (empty? region) default-region region)
+            instance-type (if (empty? instance-type) default-instance-type instance-type)
             invitees (cons username (if-not (= invite "users to invite")
                                       (usernames-for invite)))
             security-group-name (str "syme/" username)]
