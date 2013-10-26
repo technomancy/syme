@@ -7,7 +7,8 @@
                   :exclusions [org.apache.httpcomponents/httpclient
                                commons-codec]]
                  [compojure "1.1.1"]
-                 [ring/ring-jetty-adapter "1.1.6"]
+                 [ring/ring-core "1.2.0"]
+                 [ring/ring-jetty-adapter "1.2.0"]
                  [hiccup "1.0.2"]
                  [tentacles "0.2.4"]
                  [clj-http "0.6.3" :exclusions [commons-logging]]
@@ -20,5 +21,4 @@
   :min-lein-version "2.0.0"
   :plugins [[environ/environ.lein "0.2.1"]]
   :hooks [environ.leiningen.hooks]
-  :profiles {:production {:env {:production true}
-                          :offline true}})
+  :profiles {:production {:env {:production true}}})
