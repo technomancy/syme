@@ -122,44 +122,44 @@
 
 ;; TODO: break this into several defns
 (defn launch [username {:keys [project invite identity credential ami-id region]}]
-  (db/create username project region)
-  (future
-    (try
-      (let [client (make-client identity credential region)
-            ami-id (if (empty? ami-id) (default-ami-id region) ami-id)
-            region (if (empty? region) default-region region)
-            invitees (cons username (if-not (= invite "users to invite")
-                                      (usernames-for invite)))
-            security-group-name (str "syme/" username)]
-        (sql/with-connection db/db
-          (doseq [invitee invitees]
-            (db/invite username project invitee)))
-        (db/status username project "bootstrapping")
-        (println "Setting up security group for" project "...")
-        (create-security-group client security-group-name)
-        (println "launching" project "...")
-        (let [result (run-instance client security-group-name
-                                   (user-data username project invitees)
-                                   ami-id)
-              instance-id (-> result .getReservation .getInstances
-                              first .getInstanceId)]
-          (println "setting instance name to" project)
-          (set-instance-name client instance-id project)
-          (println "waiting for IP...")
-          (let [ip (poll-for-ip client instance-id 0)
-                {:keys [id]} (db/find username project)
-                dns (subdomain-for username id)]
-            (println "got IP:" ip)
-            (db/status username project "configuring"
-                       {:ip ip :instance_id instance-id :dns dns})
-            (dns/register-hostname dns ip))))
-      (catch Exception e
-        (.printStackTrace e)
-        (db/status username project
-                   (if (and (instance? AmazonServiceException e)
-                            (= "AuthFailure" (.getErrorCode e)))
-                     "unauthorized"
-                     (:status (ex-data e) "error")))))))
+  (let [region (if (empty? region) default-region region)]
+    (db/create username project region)
+    (future
+      (try
+        (let [client (make-client identity credential region)
+              ami-id (if (empty? ami-id) (default-ami-id region) ami-id)
+              invitees (cons username (if-not (= invite "users to invite")
+                                        (usernames-for invite)))
+              security-group-name (str "syme/" username)]
+          (sql/with-connection db/db
+            (doseq [invitee invitees]
+              (db/invite username project invitee)))
+          (db/status username project "bootstrapping")
+          (println "Setting up security group for" project "...")
+          (create-security-group client security-group-name)
+          (println "launching" project "...")
+          (let [result (run-instance client security-group-name
+                                     (user-data username project invitees)
+                                     ami-id)
+                instance-id (-> result .getReservation .getInstances
+                                first .getInstanceId)]
+            (println "setting instance name to" project)
+            (set-instance-name client instance-id project)
+            (println "waiting for IP...")
+            (let [ip (poll-for-ip client instance-id 0)
+                  {:keys [id]} (db/find username project)
+                  dns (subdomain-for username id)]
+              (println "got IP:" ip)
+              (db/status username project "configuring"
+                         {:ip ip :instance_id instance-id :dns dns})
+              (dns/register-hostname dns ip))))
+        (catch Exception e
+          (.printStackTrace e)
+          (db/status username project
+                     (if (and (instance? AmazonServiceException e)
+                              (= "AuthFailure" (.getErrorCode e)))
+                       "unauthorized"
+                       (:status (ex-data e) "error"))))))))
 
 (defn halt [username {:keys [project identity credential region]}]
   (let [client (make-client identity credential region)
