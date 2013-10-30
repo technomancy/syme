@@ -19,6 +19,7 @@
                                              TerminateInstancesRequest
                                              CreateTagsRequest
                                              Tag)
+           (com.amazonaws AmazonServiceException)
            (org.apache.commons.codec.binary Base64)))
 
 (def ami-by-region
@@ -62,7 +63,8 @@
     (try (.createSecurityGroup client group-request)
          (.authorizeSecurityGroupIngress client auth-request)
          (catch Exception e
-           (when-not (= "InvalidGroup.Duplicate" (.getErrorCode e))
+           (when-not (and (instance? AmazonServiceException e)
+                          (= "InvalidGroup.Duplicate" (.getErrorCode e)))
              (throw e))))
     security-group-name))
 
@@ -154,7 +156,7 @@
       (catch Exception e
         (.printStackTrace e)
         (db/status username project
-                   (if (and (instance? com.amazonaws.AmazonServiceException e)
+                   (if (and (instance? AmazonServiceException e)
                             (= "AuthFailure" (.getErrorCode e)))
                      "unauthorized"
                      (:status (ex-data e) "error")))))))
