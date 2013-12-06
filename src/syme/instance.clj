@@ -75,8 +75,14 @@
                     (map :login (orgs/members (subs org 1))))]
     (apply concat users orgs-users)))
 
+(defn primary-language [project]
+  (->> (apply repos/languages (.split project "/"))
+       (apply max-key second)
+       first
+       name))
+
 (defn user-data [username project invitees]
-  (let [{:keys [language]} (apply repos/specific-repo (.split project "/"))
+  (let [language (primary-language project)
         {:keys [name email]} (users/user username)
         {:keys [shutdown_token]} (db/find username project)
         language-script (io/resource (str "languages/" language ".sh"))]
