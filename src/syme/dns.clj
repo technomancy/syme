@@ -5,7 +5,6 @@
            (com.amazonaws.services.route53.model Change ChangeBatch
                                                  ChangeResourceRecordSetsRequest
                                                  GetHostedZoneRequest
-                                                 ListResourceRecordSetsRequest
                                                  ResourceRecord
                                                  ResourceRecordSet)))
 

@@ -71,6 +71,7 @@
 (defn usernames-for [invitees]
   (let [invitees (.split invitees ",? +")
         [orgs users] ((juxt filter remove) #(.startsWith % "+") invitees)
+        ;; TODO: is this paginated?
         orgs-users (for [org orgs]
                     (map :login (orgs/members (subs org 1))))]
     (apply concat users orgs-users)))
