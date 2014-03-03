@@ -77,10 +77,8 @@
     (apply concat users orgs-users)))
 
 (defn primary-language [project]
-  (->> (apply repos/languages (.split project "/"))
-       (apply max-key second)
-       first
-       name))
+  (if-let [langs (seq (apply repos/languages (.split project "/")))]
+    (-> (apply max-key second langs) first name)))
 
 (defn user-data [username project invitees]
   (let [language (primary-language project)
