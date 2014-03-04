@@ -89,7 +89,7 @@
             username project (clojure.string/join " " invitees) name email
             (and (:canonical-url env)
                  (str (:canonical-url env) "/status?token=" shutdown_token))
-            (and language-script (slurp language-script) ""))))
+            (if language-script (slurp language-script) ""))))
 
 (defn run-instance [client security-group user-data-script ami-id]
   (.runInstances client (-> (RunInstancesRequest.)
