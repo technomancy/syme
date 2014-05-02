@@ -72,8 +72,11 @@
                 :style "width: 48%"
                 :placeholder "region (default: us-west-2)"}]
        [:input {:type :text :name "ami-id"
-              :style "width: 48%"
-              :placeholder "ami id (optional)"}]
+                :style "width: 48%"
+                :placeholder "ami id (optional)"}]
+       [:input {:type :text :name "instance-type"
+                :style "width: 48%"
+                :placeholder "instance-type (default: m1.small)"}]
        [:hr]
        [:p {:style "float: right; margin-top: 10px; font-size: 80%"}
         "Your credentials are stored in an encrypted cookie, never"

@@ -37,6 +37,8 @@
 
 (def default-region "us-west-2")
 
+(def default-instance-type "m1.small")
+
 (defn make-endpoint-url [region]
   (str "ec2." region ".amazonaws.com"))
 
@@ -91,10 +93,10 @@
                  (str (:canonical-url env) "/status?token=" shutdown_token))
             (if language-script (slurp language-script) ""))))
 
-(defn run-instance [client security-group user-data-script ami-id]
+(defn run-instance [client security-group user-data-script ami-id instance-type]
   (.runInstances client (-> (RunInstancesRequest.)
                             (.withImageId ami-id)
-                            (.withInstanceType "m1.small")
+                            (.withInstanceType instance-type)
                             (.withMinCount (Integer. 1))
                             (.withMaxCount (Integer. 1))
                             (.withSecurityGroups [security-group])
@@ -126,7 +128,7 @@
       (recur client id (inc tries)))))
 
 ;; TODO: break this into several defns
-(defn launch [username {:keys [project invite identity credential ami-id region]}]
+(defn launch [username {:keys [project invite identity credential ami-id region instance-type]}]
   (let [region (if (empty? region) default-region region)]
     (db/create username project region)
     (future
@@ -145,7 +147,10 @@
           (println "launching" project "...")
           (let [result (run-instance client security-group-name
                                      (user-data username project invitees)
-                                     ami-id)
+                                     ami-id
+                                     (if (empty? instance-type)
+                                       default-instance-type
+                                       instance-type))
                 instance-id (-> result .getReservation .getInstances
                                 first .getInstanceId)]
             (println "setting instance name to" project)
