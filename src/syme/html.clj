@@ -3,7 +3,9 @@
             [tentacles.repos :as repos]
             [tentacles.users :as users]
             [environ.core :refer [env]]
-            [hiccup.page :refer [html5 include-css]]))
+            [syme.instance :as instance]
+            [hiccup.page :refer [html5 include-css]]
+            [hiccup.form :as form]))
 
 (def login-url (str "https://github.com/login/oauth/authorize?"
                     "client_id=" (env :oauth-client-id)))
@@ -68,9 +70,10 @@
        [:input {:type :text :style "width: 320px"
                 :name "credential" :id "credential"
                 :value credential :placeholder "AWS Secret Key"}]
-       [:input {:type :text :name "region"
-                :style "width: 48%"
-                :placeholder "region (default: us-west-2)"}]
+       (form/drop-down "region" (->> (keys instance/ami-by-region)
+                                     (map name)
+                                     sort)
+                       "us-west-2")
        [:input {:type :text :name "ami-id"
                 :style "width: 48%"
                 :placeholder "ami id (optional)"}]
