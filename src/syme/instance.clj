@@ -23,14 +23,14 @@
            (org.apache.commons.codec.binary Base64)))
 
 (def ami-by-region
-  {:sa-east-1 "ami-3bec3426",
-   :ap-northeast-1 "ami-b8a813b9",
-   :ap-southeast-2 "ami-f57ee9cf",
-   :eu-west-1 "ami-26090552",
-   :ap-southeast-1 "ami-4923611b",
-   :us-west-2 "ami-162ea626",
-   :us-west-1 "ami-44745401",
-   :us-east-1 "ami-9b3db0f2"})
+  {:sa-east-1 "ami-0970d814",
+   :ap-northeast-1 "ami-e58cd6e4",
+   :ap-southeast-2 "ami-cd6405f7",
+   :eu-west-1 "ami-3eba6549",
+   :ap-southeast-1 "ami-28fda67a",
+   :us-west-2 "ami-57cf8a67",
+   :us-west-1 "ami-29777b6c",
+   :us-east-1 "ami-9ac11df2"})
 
 (defn default-ami-id [region]
   (get ami-by-region (keyword region)))
