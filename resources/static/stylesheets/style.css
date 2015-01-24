@@ -64,6 +64,7 @@ div p#status {
     padding: 15px;
     float: right;
     font-weight: bold;
+    margin: 0px;
 }
 
 div p#status.bootstrapping {
