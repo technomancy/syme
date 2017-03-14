@@ -7,8 +7,10 @@ jobs:
       - image: postgres:9.4.1
         environment:
           POSTGRES_USER: root
+          POSTGRES_DB: syme
     environment:
       LEIN_ROOT=nbd
+      DATABASE_URL=postgres://localhost/syme
     steps:
       - checkout
       # Pull the dependencies in a way that they're cached.
