@@ -138,7 +138,8 @@
       [:p "You have no instances"])
     [:hr]
     [:p "You may want to periodically check your "
-     [:a {:href "https://console.aws.amazon.com/ec2/home?region=us-west-2#s=Instances"}
+     [:a {:href
+          "https://console.aws.amazon.com/ec2/home?region=us-west-2#s=Instances"}
       "AWS EC2 console"]
      " to ensure you aren't billed for instances you intended to stop that"
      " stayed running due to problems with Syme. In particular this happens"

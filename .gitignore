@@ -11,3 +11,4 @@ pom.xml
 /logs
 /.lein-repl-history
 /pg
+/.nrepl-port

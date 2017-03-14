@@ -128,7 +128,8 @@
       (recur client id (inc tries)))))
 
 ;; TODO: break this into several defns
-(defn launch [username {:keys [project invite identity credential ami-id region instance-type]}]
+(defn launch [username {:keys [project invite identity credential
+                               ami-id region instance-type]}]
   (let [region (if (empty? region) default-region region)]
     (db/create username project region)
     (future

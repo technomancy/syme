@@ -67,6 +67,6 @@ only valid for `http://localhost:5000`.
 
 ## License
 
-Copyright © 2013 Phil Hagelberg
+Copyright © 2013, 2014, 2017 Phil Hagelberg and contributors
 
 Distributed under the Eclipse Public License, the same as Clojure.
