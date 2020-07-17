@@ -1,5 +1,8 @@
 # Syme
 
+This project is no longer maintained; if you want to do this kind of
+pairing I recommend you try [tmate](https://tmate.io) instead.
+
 Instant collaboration on GitHub projects.
 
 > Almost in the act of stepping on board, Gabriel Syme turned to the gaping Gregory.
